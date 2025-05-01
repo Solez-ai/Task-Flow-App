@@ -1,16 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 import Timer from './Timer';
 import { Task } from './TaskItem';
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/useTheme';
-import AITaskSuggestion from './AITaskSuggestion';
-import AIProductivityInsights from './AIProductivityInsights';
-import { BrainCircuit } from 'lucide-react';
 
 const TaskFlowTimer: React.FC = () => {
   const { theme } = useTheme();
@@ -20,8 +16,6 @@ const TaskFlowTimer: React.FC = () => {
   });
   
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [currentTab, setCurrentTab] = useState('tasks');
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -49,9 +43,6 @@ const TaskFlowTimer: React.FC = () => {
   const deleteTask = (id: string) => {
     if (activeTask && activeTask.id === id) {
       setActiveTask(null);
-    }
-    if (selectedTask && selectedTask.id === id) {
-      setSelectedTask(null);
     }
     setTasks(tasks.filter((task) => task.id !== id));
     toast.success("Task deleted successfully!");
@@ -85,25 +76,6 @@ const TaskFlowTimer: React.FC = () => {
     });
   };
 
-  const showAIOptions = (task: Task) => {
-    setSelectedTask(task);
-    setCurrentTab('ai');
-  };
-
-  const updateTask = (updatedTask: Task) => {
-    setTasks(tasks.map(task => 
-      task.id === updatedTask.id ? updatedTask : task
-    ));
-    
-    if (activeTask?.id === updatedTask.id) {
-      setActiveTask(updatedTask);
-    }
-    
-    if (selectedTask?.id === updatedTask.id) {
-      setSelectedTask(updatedTask);
-    }
-  };
-
   return (
     <div className="container mx-auto max-w-3xl p-4">
       <h1 className="text-3xl font-bold text-center mb-4 text-task-dark dark:text-task">FocusFlow</h1>
@@ -115,57 +87,22 @@ const TaskFlowTimer: React.FC = () => {
         onResetActiveTask={() => setActiveTask(null)}
       />
       
-      <Tabs defaultValue="tasks" value={currentTab} onValueChange={setCurrentTab} className="mt-8">
-        <TabsList className="grid grid-cols-2 mb-4 bg-gray-100 dark:bg-slate-800">
-          <TabsTrigger value="tasks" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700">
-            Task Management
-          </TabsTrigger>
-          <TabsTrigger value="ai" className="data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700">
-            <span className="flex items-center">
-              <BrainCircuit className="w-4 h-4 mr-1" />
-              AI Assistant
-            </span>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="tasks">
-          <Card className="dark:bg-slate-900 dark:border-slate-800">
-            <CardHeader>
-              <CardTitle className="dark:text-gray-200">Tasks</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TaskForm onAddTask={addTask} />
-              <div className="mt-4">
-                <TaskList 
-                  tasks={tasks} 
-                  onToggle={toggleTask} 
-                  onDelete={deleteTask}
-                  onStartTimer={startTaskTimer}
-                  onShowAIOptions={showAIOptions}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="ai">
-          <div className="space-y-6">
-            {selectedTask ? (
-              <AITaskSuggestion 
-                task={selectedTask} 
-                onUpdateTask={updateTask} 
-              />
-            ) : (
-              <div className="p-6 border border-dashed rounded-lg text-center bg-gray-50 dark:bg-slate-800 dark:border-slate-700">
-                <BrainCircuit className="mx-auto h-8 w-8 text-task dark:text-task-light opacity-60 mb-2" />
-                <p className="text-gray-600 dark:text-gray-400">Select a task to get AI-powered suggestions</p>
-              </div>
-            )}
-            
-            <AIProductivityInsights tasks={tasks} />
+      <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
+        <CardHeader>
+          <CardTitle className="dark:text-gray-200">Tasks</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TaskForm onAddTask={addTask} />
+          <div className="mt-4">
+            <TaskList 
+              tasks={tasks} 
+              onToggle={toggleTask} 
+              onDelete={deleteTask}
+              onStartTimer={startTaskTimer}
+            />
           </div>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };
