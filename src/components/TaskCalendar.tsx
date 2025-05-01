@@ -162,12 +162,7 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({ tasks, open, onOpenChange }
                 width: '100%', 
                 tableLayout: 'fixed',
                 borderSpacing: '0.25rem'
-              },
-              day_outside: { opacity: 0.4 },
-              day_today: { 
-                fontWeight: 'bold',
-                border: theme === 'dark' ? '2px solid #cbd5e1' : '2px solid #8B5CF6'
-              },
+              }
             }}
           />
         </div>
