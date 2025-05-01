@@ -6,13 +6,14 @@ interface TaskListProps {
   tasks: Task[];
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onStartTimer?: (task: Task) => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, onToggle, onDelete }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, onToggle, onDelete, onStartTimer }) => {
   if (tasks.length === 0) {
     return (
-      <div className="p-8 text-center border border-dashed rounded-md bg-gray-50">
-        <p className="text-gray-500">No tasks yet. Add one to get started!</p>
+      <div className="p-8 text-center border border-dashed rounded-md bg-gray-50 dark:bg-slate-800 dark:border-slate-700">
+        <p className="text-gray-500 dark:text-gray-400">No tasks yet. Add one to get started!</p>
       </div>
     );
   }
@@ -25,6 +26,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggle, onDelete }) => {
           task={task}
           onToggle={onToggle}
           onDelete={onDelete}
+          onStartTimer={onStartTimer}
         />
       ))}
     </div>

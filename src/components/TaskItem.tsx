@@ -2,52 +2,75 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Play, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface Task {
   id: string;
   text: string;
   completed: boolean;
+  timeInMinutes?: number;
 }
 
 interface TaskItemProps {
   task: Task;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onStartTimer?: (task: Task) => void;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onDelete }) => {
+const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onDelete, onStartTimer }) => {
   return (
     <div className={cn(
       "flex items-center justify-between p-3 mb-2 rounded-md border",
-      task.completed ? "bg-task-light border-task-completed" : "bg-white border-gray-200"
+      task.completed ? "bg-task-light border-task-completed dark:bg-slate-800 dark:border-green-700" : "bg-white border-gray-200 dark:bg-slate-800 dark:border-slate-700"
     )}>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-grow">
         <Checkbox 
           checked={task.completed} 
           onCheckedChange={() => onToggle(task.id)} 
           className={cn(
-            task.completed ? "border-task-completed" : "border-gray-300"
+            task.completed ? "border-task-completed" : "border-gray-300 dark:border-slate-500"
           )}
         />
         <span 
           className={cn(
             "text-sm transition-all",
-            task.completed ? "line-through text-gray-400" : "text-gray-700"
+            task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-200"
           )}
         >
           {task.text}
         </span>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onDelete(task.id)}
-        className="text-gray-500 hover:text-destructive"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      
+      <div className="flex items-center gap-2">
+        {task.timeInMinutes && !task.completed && (
+          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mr-2">
+            <Clock className="h-3 w-3 mr-1" />
+            {task.timeInMinutes} min
+          </div>
+        )}
+        
+        {!task.completed && task.timeInMinutes && onStartTimer && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onStartTimer(task)}
+            className="text-green-500 hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900/30 dark:hover:text-green-400"
+          >
+            <Play className="h-4 w-4" />
+          </Button>
+        )}
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(task.id)}
+          className="text-gray-500 hover:text-destructive dark:text-gray-400 dark:hover:text-red-400"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };

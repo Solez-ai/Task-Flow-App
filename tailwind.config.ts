@@ -95,12 +95,17 @@ export default {
 				'progress': {
 					'0%': { width: '0%' },
 					'100%': { width: '100%' }
+				},
+				'pulse-glow': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.7', boxShadow: '0 0 15px rgba(139, 92, 246, 0.7)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'progress': 'progress var(--duration) linear forwards'
+				'progress': 'progress var(--duration) linear forwards',
+				'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
 			}
 		}
 	},
