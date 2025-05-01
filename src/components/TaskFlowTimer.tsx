@@ -19,7 +19,7 @@ const TaskFlowTimer: React.FC = () => {
   });
   
   const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const { stats, addPomodoroSession, addCompletedTask, resetStats } = useDailyStats();
+  const { stats, addPomodoroSession, addCompletedTask, addStudyModeRound, resetStats } = useDailyStats();
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -99,6 +99,13 @@ const TaskFlowTimer: React.FC = () => {
         });
       }
     }
+  };
+
+  const handleStudyRoundComplete = () => {
+    addStudyModeRound();
+    toast.success("Study round completed!", {
+      description: "Great job keeping focused!"
+    });
   };
 
   const startTaskTimer = (task: Task) => {

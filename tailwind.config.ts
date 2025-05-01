@@ -68,6 +68,12 @@ export default {
 					light: '#E5DEFF',
 					dark: '#7E69AB',
 					completed: '#22C55E'
+				},
+				study: {
+					DEFAULT: '#00C49A',
+					light: '#E0FFF9',
+					dark: '#00A080',
+					border: '#00BF92'
 				}
 			},
 			borderRadius: {

@@ -5,6 +5,7 @@ export interface DailyStats {
   pomodoroSessions: number;
   completedTasks: number;
   focusedTimeMinutes: number;
+  studyModeRounds: number;
 }
 
 export const useDailyStats = () => {
@@ -22,7 +23,8 @@ export const useDailyStats = () => {
       return {
         pomodoroSessions: 0,
         completedTasks: 0,
-        focusedTimeMinutes: 0
+        focusedTimeMinutes: 0,
+        studyModeRounds: 0
       };
     }
   });
@@ -49,13 +51,22 @@ export const useDailyStats = () => {
       completedTasks: prev.completedTasks + 1
     }));
   };
+  
+  // Add a study mode round
+  const addStudyModeRound = () => {
+    setStats(prev => ({
+      ...prev,
+      studyModeRounds: prev.studyModeRounds + 1
+    }));
+  };
 
   // Reset stats
   const resetStats = () => {
     setStats({
       pomodoroSessions: 0,
       completedTasks: 0,
-      focusedTimeMinutes: 0
+      focusedTimeMinutes: 0,
+      studyModeRounds: 0
     });
   };
 
@@ -63,6 +74,7 @@ export const useDailyStats = () => {
     stats,
     addPomodoroSession,
     addCompletedTask,
+    addStudyModeRound,
     resetStats
   };
 };
