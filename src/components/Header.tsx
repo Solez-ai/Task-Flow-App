@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { Sun, Moon, Info, User, BrainCircuit } from 'lucide-react';
+import { toast } from 'sonner';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -24,6 +25,12 @@ const Header: React.FC = () => {
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
 
+  const handleAIAssistantClick = () => {
+    toast.info("AI Features Coming Soon", {
+      description: "We're working on intelligent features to help you be more productive!"
+    });
+  };
+
   return (
     <header className="py-4 px-4 sm:px-6 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 dark:border-slate-800 sticky top-0 z-10">
       <div className="container mx-auto max-w-7xl">
@@ -38,6 +45,7 @@ const Header: React.FC = () => {
               variant="outline" 
               size="sm"
               className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white border-none hover:opacity-90 transition-opacity"
+              onClick={handleAIAssistantClick}
             >
               <span className="absolute inset-0 animate-pulse bg-white/20 rounded-md"></span>
               <BrainCircuit className="mr-1 h-4 w-4" />
