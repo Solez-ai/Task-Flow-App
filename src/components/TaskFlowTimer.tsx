@@ -5,6 +5,7 @@ import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 import Timer from './Timer';
 import DailyStatsPanel from './DailyStatsPanel';
+import StreakPanel from './StreakPanel';
 import { Task } from './TaskItem';
 import { useDailyStats } from '@/hooks/useDailyStats';
 import { toast } from 'sonner';
@@ -140,6 +141,12 @@ const TaskFlowTimer: React.FC = () => {
         />
         
         <DailyStatsPanel stats={stats} onResetStats={resetStats} />
+        
+        {/* Add the Streak Panel below DailyStatsPanel */}
+        <StreakPanel 
+          streak={stats.streak} 
+          completedToday={stats.completedTasks} 
+        />
         
         <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
           <CardHeader>

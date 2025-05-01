@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 export interface DailyStats {
@@ -6,6 +5,8 @@ export interface DailyStats {
   completedTasks: number;
   focusedTimeMinutes: number;
   studyModeRounds: number;
+  streak: number;
+  lastTaskDate: string | null;
 }
 
 export const useDailyStats = () => {
@@ -19,12 +20,32 @@ export const useDailyStats = () => {
     if (savedStats && savedDate === today) {
       return JSON.parse(savedStats);
     } else {
-      // Reset stats for a new day
+      // Check if we need to reset streak
+      const lastTaskDate = localStorage.getItem('lastTaskDate');
+      let streak = 0;
+      
+      if (lastTaskDate) {
+        // Get the difference in days between now and the last task completion
+        const lastDate = new Date(lastTaskDate);
+        const currentDate = new Date();
+        const diffTime = Math.abs(currentDate.getTime() - lastDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        // If less than 2 days have passed, keep the streak
+        if (diffDays < 2) {
+          const oldStats = localStorage.getItem('dailyStats');
+          streak = oldStats ? JSON.parse(oldStats).streak : 0;
+        }
+      }
+      
+      // Reset stats for a new day but keep the streak if applicable
       return {
         pomodoroSessions: 0,
         completedTasks: 0,
         focusedTimeMinutes: 0,
-        studyModeRounds: 0
+        studyModeRounds: 0,
+        streak: streak,
+        lastTaskDate: lastTaskDate
       };
     }
   });
@@ -46,10 +67,30 @@ export const useDailyStats = () => {
 
   // Add a completed task
   const addCompletedTask = () => {
-    setStats(prev => ({
-      ...prev,
-      completedTasks: prev.completedTasks + 1
-    }));
+    const today = new Date().toISOString();
+    
+    setStats(prev => {
+      // Increment completed tasks
+      const newCompletedTasks = prev.completedTasks + 1;
+      
+      // Update streak logic
+      let newStreak = prev.streak;
+      
+      // If this is at least the second task, start or continue streak
+      if (newCompletedTasks >= 2) {
+        newStreak += (prev.streak === 0) ? 1 : 0; // Increment only when starting a new streak
+      }
+      
+      return {
+        ...prev,
+        completedTasks: newCompletedTasks,
+        streak: newStreak > 0 ? newStreak : (newCompletedTasks >= 2 ? 1 : 0),
+        lastTaskDate: today
+      };
+    });
+    
+    // Store last task date separately for streak calculations
+    localStorage.setItem('lastTaskDate', new Date().toISOString());
   };
   
   // Add a study mode round
@@ -66,8 +107,19 @@ export const useDailyStats = () => {
       pomodoroSessions: 0,
       completedTasks: 0,
       focusedTimeMinutes: 0,
-      studyModeRounds: 0
+      studyModeRounds: 0,
+      streak: 0,
+      lastTaskDate: null
     });
+    localStorage.removeItem('lastTaskDate');
+  };
+
+  // Increment streak (used when completing a day)
+  const incrementStreak = () => {
+    setStats(prev => ({
+      ...prev,
+      streak: prev.streak + 1
+    }));
   };
 
   return {
@@ -75,6 +127,7 @@ export const useDailyStats = () => {
     addPomodoroSession,
     addCompletedTask,
     addStudyModeRound,
-    resetStats
+    resetStats,
+    incrementStreak
   };
 };
