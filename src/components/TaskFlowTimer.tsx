@@ -9,6 +9,7 @@ import { Task } from './TaskItem';
 import { useDailyStats } from '@/hooks/useDailyStats';
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/useTheme';
+import Header from './Header';
 
 const TaskFlowTimer: React.FC = () => {
   const { theme } = useTheme();
@@ -29,7 +30,8 @@ const TaskFlowTimer: React.FC = () => {
       id: Math.random().toString(36).substring(2, 9),
       text,
       completed: false,
-      timeInMinutes
+      timeInMinutes,
+      note: ''
     };
     setTasks([...tasks, newTask]);
     toast.success("Task added successfully!");
@@ -40,11 +42,18 @@ const TaskFlowTimer: React.FC = () => {
       tasks.map((task) => {
         if (task.id === id) {
           const newCompleted = !task.completed;
-          // If task is being marked as completed, update daily stats
+          // If task is being marked as completed, update daily stats and add completedAt timestamp
+          const updatedTask = { 
+            ...task, 
+            completed: newCompleted,
+            completedAt: newCompleted ? new Date().toISOString() : undefined
+          };
+          
           if (newCompleted) {
             addCompletedTask();
           }
-          return { ...task, completed: newCompleted };
+          
+          return updatedTask;
         }
         return task;
       })
@@ -70,7 +79,11 @@ const TaskFlowTimer: React.FC = () => {
         tasks.map((task) => {
           if (task.id === activeTask.id) {
             addCompletedTask(); // Count as completed task
-            return { ...task, completed: true };
+            return { 
+              ...task, 
+              completed: true,
+              completedAt: new Date().toISOString()
+            };
           }
           return task;
         })
@@ -94,36 +107,51 @@ const TaskFlowTimer: React.FC = () => {
       description: `${task.timeInMinutes} minute focus session`
     });
   };
+  
+  const updateTaskNote = (id: string, note: string) => {
+    setTasks(
+      tasks.map((task) => {
+        if (task.id === id) {
+          return { ...task, note };
+        }
+        return task;
+      })
+    );
+  };
 
   return (
-    <div className="container mx-auto max-w-3xl p-4">
-      <h1 className="text-3xl font-bold text-center mb-4 text-task-dark dark:text-task">FocusFlow</h1>
-      <p className="text-center mb-8 text-gray-600 dark:text-gray-300">Manage your time efficiently and complete tasks with structured work sessions.</p>
-      
-      <Timer 
-        onSessionComplete={handleSessionComplete} 
-        activeTask={activeTask}
-        onResetActiveTask={() => setActiveTask(null)}
-      />
-      
-      <DailyStatsPanel stats={stats} onResetStats={resetStats} />
-      
-      <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
-        <CardHeader>
-          <CardTitle className="dark:text-gray-200">Tasks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TaskForm onAddTask={addTask} />
-          <div className="mt-4">
-            <TaskList 
-              tasks={tasks} 
-              onToggle={toggleTask} 
-              onDelete={deleteTask}
-              onStartTimer={startTaskTimer}
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
+      <Header tasks={tasks} />
+      <div className="container mx-auto max-w-3xl p-4 py-8">
+        <h1 className="text-3xl font-bold text-center mb-4 text-task-dark dark:text-task">FocusFlow</h1>
+        <p className="text-center mb-8 text-gray-600 dark:text-gray-300">Manage your time efficiently and complete tasks with structured work sessions.</p>
+        
+        <Timer 
+          onSessionComplete={handleSessionComplete} 
+          activeTask={activeTask}
+          onResetActiveTask={() => setActiveTask(null)}
+        />
+        
+        <DailyStatsPanel stats={stats} onResetStats={resetStats} />
+        
+        <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
+          <CardHeader>
+            <CardTitle className="dark:text-gray-200">Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TaskForm onAddTask={addTask} />
+            <div className="mt-4">
+              <TaskList 
+                tasks={tasks} 
+                onToggle={toggleTask} 
+                onDelete={deleteTask}
+                onStartTimer={startTaskTimer}
+                onUpdateNote={updateTaskNote}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

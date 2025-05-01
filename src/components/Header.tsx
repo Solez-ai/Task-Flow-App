@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
-import { Sun, Moon, Info, User, BrainCircuit } from 'lucide-react';
+import { Sun, Moon, Info, User, BrainCircuit, Calendar, Calculator as CalculatorIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { 
   DropdownMenu, 
@@ -19,11 +18,19 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import TaskCalendar from './TaskCalendar';
+import Calculator from './Calculator';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  tasks: Array<any>; // We'll type this properly when we use it
+}
+
+const Header: React.FC<HeaderProps> = ({ tasks }) => {
   const { theme, toggleTheme } = useTheme();
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   const handleAIAssistantClick = () => {
     toast.info("AI Features Coming Soon", {
@@ -35,8 +42,30 @@ const Header: React.FC = () => {
     <header className="py-4 px-4 sm:px-6 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 dark:border-slate-800 sticky top-0 z-10">
       <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <span className="text-2xl font-bold text-task-dark dark:text-task">FocusFlow</span>
+            
+            {/* Mini Calendar Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCalendarOpen(true)}
+              className="h-8 w-8 rounded-full hover:bg-task/10 dark:hover:bg-task/20"
+              title="Task Calendar"
+            >
+              <Calendar className="h-4 w-4 text-task-dark dark:text-task" />
+            </Button>
+            
+            {/* Mini Calculator Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCalculatorOpen(true)}
+              className="h-8 w-8 rounded-full hover:bg-task/10 dark:hover:bg-task/20"
+              title="Quick Calculator"
+            >
+              <CalculatorIcon className="h-4 w-4 text-task-dark dark:text-task" />
+            </Button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -199,6 +228,19 @@ const Header: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Calendar Modal */}
+      <TaskCalendar 
+        open={calendarOpen} 
+        onOpenChange={setCalendarOpen} 
+        tasks={tasks}
+      />
+      
+      {/* Calculator Modal */}
+      <Calculator
+        open={calculatorOpen}
+        onOpenChange={setCalculatorOpen}
+      />
     </header>
   );
 };

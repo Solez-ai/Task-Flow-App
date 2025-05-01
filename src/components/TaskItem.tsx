@@ -1,15 +1,24 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2, Play, Clock } from 'lucide-react';
+import { Trash2, Play, Clock, StickyNote, PenLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 export interface Task {
   id: string;
   text: string;
   completed: boolean;
   timeInMinutes?: number;
+  completedAt?: string; // When the task was completed
+  note?: string; // Task notes
 }
 
 interface TaskItemProps {
@@ -17,7 +26,8 @@ interface TaskItemProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onStartTimer?: (task: Task) => void;
-  onShowAIOptions?: (task: Task) => void; // Added this prop to fix the TypeScript error
+  onShowAIOptions?: (task: Task) => void;
+  onUpdateNote?: (id: string, note: string) => void;
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ 
@@ -25,8 +35,24 @@ const TaskItem: React.FC<TaskItemProps> = ({
   onToggle, 
   onDelete, 
   onStartTimer,
-  onShowAIOptions
+  onShowAIOptions,
+  onUpdateNote
 }) => {
+  const [note, setNote] = useState(task.note || '');
+  
+  const handleNoteChange = (value: string) => {
+    setNote(value);
+  };
+  
+  const handleNoteSave = () => {
+    if (onUpdateNote) {
+      onUpdateNote(task.id, note);
+      toast.success("Note saved");
+    }
+  };
+
+  const hasNote = task.note && task.note.trim().length > 0;
+
   return (
     <div className={cn(
       "flex items-center justify-between p-3 mb-2 rounded-md border",
@@ -49,6 +75,11 @@ const TaskItem: React.FC<TaskItemProps> = ({
           >
             {task.text}
           </span>
+          {hasNote && (
+            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1">
+              <StickyNote className="h-3 w-3 mr-1" /> Has note
+            </span>
+          )}
         </div>
       </div>
       
@@ -59,6 +90,43 @@ const TaskItem: React.FC<TaskItemProps> = ({
             {task.timeInMinutes} min
           </div>
         )}
+        
+        {/* Note Button */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300",
+                hasNote && "text-amber-500 dark:text-amber-400"
+              )}
+            >
+              <PenLine className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 dark:bg-slate-900 dark:border-slate-800">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm dark:text-gray-200">Notes for: {task.text}</h4>
+              <Textarea 
+                placeholder="Add some notes..." 
+                value={note} 
+                onChange={(e) => handleNoteChange(e.target.value)} 
+                className="min-h-[100px] dark:bg-slate-800 dark:border-slate-700"
+              />
+              <div className="flex justify-end">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={handleNoteSave} 
+                  className="bg-task hover:bg-task-dark dark:bg-task dark:hover:bg-task-dark"
+                >
+                  Save Note
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
         
         {!task.completed && task.timeInMinutes && onStartTimer && (
           <Button
