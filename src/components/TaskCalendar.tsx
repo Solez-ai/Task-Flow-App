@@ -104,8 +104,8 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({ tasks, open, onOpenChange }
             modifiersStyles={{
               completed: { color: 'white', fontWeight: 'bold', backgroundColor: 'var(--task)' }
             }}
-            styles={{
-              day_selected: getColorClass(),
+            modifiersClassNames={{
+              selected: getColorClass()
             }}
           />
         </div>
