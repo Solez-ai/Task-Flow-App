@@ -3,102 +3,63 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { Sun, Moon, Info, User, BrainCircuit, Calendar, Calculator as CalculatorIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuLabel
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TaskCalendar from './TaskCalendar';
 import Calculator from './Calculator';
-
 interface HeaderProps {
   tasks: Array<any>; // We'll type this properly when we use it
 }
-
-const Header: React.FC<HeaderProps> = ({ tasks }) => {
-  const { theme, toggleTheme } = useTheme();
+const Header: React.FC<HeaderProps> = ({
+  tasks
+}) => {
+  const {
+    theme,
+    toggleTheme
+  } = useTheme();
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
-
   const handleAIAssistantClick = () => {
     toast.info("AI Features Coming Soon", {
       description: "We're working on intelligent features to help you be more productive!"
     });
   };
-
-  return (
-    <header className="py-4 px-4 sm:px-6 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 dark:border-slate-800 sticky top-0 z-10">
+  return <header className="py-4 px-4 sm:px-6 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 dark:border-slate-800 sticky top-0 z-10">
       <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl font-bold text-task-dark dark:text-task">FocusFlow</span>
             
             {/* Mini Calendar Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCalendarOpen(true)}
-              className="h-8 w-8 rounded-full hover:bg-task/10 dark:hover:bg-task/20"
-              title="Task Calendar"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setCalendarOpen(true)} className="h-8 w-8 rounded-full hover:bg-task/10 dark:hover:bg-task/20" title="Task Calendar">
               <Calendar className="h-4 w-4 text-task-dark dark:text-task" />
             </Button>
             
             {/* Mini Calculator Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCalculatorOpen(true)}
-              className="h-8 w-8 rounded-full hover:bg-task/10 dark:hover:bg-task/20"
-              title="Quick Calculator"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setCalculatorOpen(true)} className="h-8 w-8 rounded-full hover:bg-task/10 dark:hover:bg-task/20" title="Quick Calculator">
               <CalculatorIcon className="h-4 w-4 text-task-dark dark:text-task" />
             </Button>
           </div>
 
           <div className="flex items-center gap-3">
             {/* AI Assistant Button */}
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white border-none hover:opacity-90 transition-opacity"
-              onClick={handleAIAssistantClick}
-            >
+            <Button variant="outline" size="sm" className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white border-none hover:opacity-90 transition-opacity" onClick={handleAIAssistantClick}>
               <span className="absolute inset-0 animate-pulse bg-white/20 rounded-md"></span>
               <BrainCircuit className="mr-1 h-4 w-4" />
               <span>AI Assistant</span>
             </Button>
             
             {/* Theme Toggle */}
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full dark:text-gray-300"
-            >
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full dark:text-gray-300">
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
             
             {/* About Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="rounded-full dark:text-gray-300"
-                >
+                <Button variant="ghost" size="icon" className="rounded-full dark:text-gray-300">
                   <Info className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -118,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({ tasks }) => {
             </DropdownMenu>
             
             {/* Account (placeholder) */}
-            <Button variant="outline" size="sm" className="dark:bg-slate-800 dark:border-slate-700 dark:text-gray-300">
+            <Button variant="outline" size="sm" className="dark:border-slate-700 dark:text-gray-300 bg-slate-900 hover:bg-slate-800 rounded-sm">
               <User className="mr-1 h-4 w-4" />
               <span>Account</span>
             </Button>
@@ -230,19 +191,10 @@ const Header: React.FC<HeaderProps> = ({ tasks }) => {
       </Dialog>
       
       {/* Calendar Modal */}
-      <TaskCalendar 
-        open={calendarOpen} 
-        onOpenChange={setCalendarOpen} 
-        tasks={tasks}
-      />
+      <TaskCalendar open={calendarOpen} onOpenChange={setCalendarOpen} tasks={tasks} />
       
       {/* Calculator Modal */}
-      <Calculator
-        open={calculatorOpen}
-        onOpenChange={setCalculatorOpen}
-      />
-    </header>
-  );
+      <Calculator open={calculatorOpen} onOpenChange={setCalculatorOpen} />
+    </header>;
 };
-
 export default Header;
