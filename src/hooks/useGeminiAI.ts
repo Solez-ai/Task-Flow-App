@@ -6,13 +6,28 @@ export function useGeminiAI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<GeminiAPIResponse | null>(null);
+  const [chatHistory, setChatHistory] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
 
-  const queryGemini = async (prompt: string) => {
+  const queryGemini = async (prompt: string, includeChatHistory = false) => {
     setLoading(true);
     setError(null);
     
     try {
-      const result = await callGeminiAPI(prompt);
+      // Add current prompt to chat history
+      const updatedChatHistory = includeChatHistory ? 
+        [...chatHistory, {role: 'user', content: prompt}] : 
+        [{role: 'user', content: prompt}];
+        
+      const result = await callGeminiAPI(prompt, includeChatHistory ? chatHistory : undefined);
+      
+      // Update chat history with the response
+      if (includeChatHistory && result) {
+        setChatHistory([
+          ...updatedChatHistory,
+          {role: 'assistant', content: result.text}
+        ]);
+      }
+      
       setResponse(result);
       return result;
     } catch (err) {
@@ -30,6 +45,8 @@ export function useGeminiAI() {
     response,
     loading,
     error,
-    clearResponse: () => setResponse(null)
+    chatHistory,
+    clearResponse: () => setResponse(null),
+    clearChatHistory: () => setChatHistory([])
   };
 }

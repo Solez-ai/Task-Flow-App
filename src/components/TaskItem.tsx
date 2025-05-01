@@ -2,9 +2,10 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2, Play, Clock } from 'lucide-react';
+import { Trash2, Play, Clock, Tag } from 'lucide-react';
 import { BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export interface Task {
   id: string;
@@ -13,6 +14,7 @@ export interface Task {
   timeInMinutes?: number;
   priority?: 'high' | 'medium' | 'low';
   sentiment?: 'positive' | 'negative' | 'neutral';
+  project?: string;
 }
 
 interface TaskItemProps {
@@ -55,25 +57,36 @@ const TaskItem: React.FC<TaskItemProps> = ({
             task.completed ? "border-task-completed" : "border-gray-300 dark:border-slate-500"
           )}
         />
-        <span 
-          className={cn(
-            "text-sm transition-all",
-            task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-200"
-          )}
-        >
-          {task.text}
-        </span>
-        
-        {task.priority && (
-          <span className={cn(
-            "text-xs px-2 py-0.5 rounded-full",
-            task.priority === 'high' ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" :
-            task.priority === 'medium' ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300" :
-            "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-          )}>
-            {task.priority}
+        <div className="flex flex-col">
+          <span 
+            className={cn(
+              "text-sm transition-all",
+              task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-200"
+            )}
+          >
+            {task.text}
           </span>
-        )}
+          
+          <div className="flex flex-wrap gap-1 mt-1">
+            {task.priority && (
+              <Badge className={cn(
+                "text-xs px-2 py-0.5",
+                task.priority === 'high' ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" :
+                task.priority === 'medium' ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300" :
+                "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+              )}>
+                {task.priority}
+              </Badge>
+            )}
+            
+            {task.project && (
+              <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                <Tag className="h-3 w-3" />
+                {task.project}
+              </Badge>
+            )}
+          </div>
+        </div>
       </div>
       
       <div className="flex items-center gap-2">

@@ -11,12 +11,29 @@ export interface GeminiAPIResponse {
   sentiment?: 'positive' | 'negative' | 'neutral';
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 // For demonstration purposes only - in production this should be in Supabase Edge Function
-export const callGeminiAPI = async (prompt: string): Promise<GeminiAPIResponse> => {
+export const callGeminiAPI = async (
+  prompt: string, 
+  chatHistory?: ChatMessage[]
+): Promise<GeminiAPIResponse> => {
   console.log('Simulating Gemini API call with prompt:', prompt);
+  console.log('Chat history:', chatHistory);
   
   // Simulate API delay for realism
   await new Promise(resolve => setTimeout(resolve, 800));
+
+  // Handle project tagging
+  if (prompt.toLowerCase().includes('project') && 
+      (prompt.toLowerCase().includes('tag') || prompt.toLowerCase().includes('add'))) {
+    return {
+      text: "I can help you tag this task with a project. Simply type the project name in the input field above and click 'Add'.",
+    };
+  }
   
   if (prompt.includes('prioritize')) {
     // Task prioritization
@@ -184,6 +201,24 @@ export const callGeminiAPI = async (prompt: string): Promise<GeminiAPIResponse> 
         "Schedule breaks between task blocks to maintain mental energy",
         "End your day by reviewing what you've accomplished and planning for tomorrow"
       ]
+    };
+  }
+  
+  // Handle general chat messages
+  if (chatHistory && chatHistory.length > 0) {
+    const responses = [
+      "I can help you manage your tasks more effectively. Would you like suggestions on prioritization?",
+      "Consider breaking down large tasks into smaller, more manageable pieces.",
+      "Setting realistic time estimates can help you plan your day better.",
+      "I notice you're working on several tasks. Is there a specific one you'd like to focus on?",
+      "Would you like me to analyze this task and suggest a priority level?",
+      "I can help you estimate how long this task might take to complete.",
+      "Using project tags can help you organize related tasks together.",
+      "Remember to take breaks between tasks to maintain productivity.",
+    ];
+    
+    return {
+      text: responses[Math.floor(Math.random() * responses.length)]
     };
   }
   
