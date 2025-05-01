@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Fire } from 'lucide-react';
+import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StreakPanelProps {
@@ -32,7 +32,7 @@ const StreakPanel: React.FC<StreakPanelProps> = ({ streak, completedToday }) => 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex items-center p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
-              <Fire 
+              <Flame 
                 size={20} 
                 className="text-amber-600 dark:text-amber-500 animate-pulse-glow" 
               />
