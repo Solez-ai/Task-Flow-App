@@ -17,13 +17,15 @@ interface TaskItemProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onStartTimer?: (task: Task) => void;
+  onShowAIOptions?: (task: Task) => void; // Added this prop to fix the TypeScript error
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ 
   task, 
   onToggle, 
   onDelete, 
-  onStartTimer
+  onStartTimer,
+  onShowAIOptions
 }) => {
   return (
     <div className={cn(
