@@ -7,9 +7,16 @@ interface TaskListProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onStartTimer?: (task: Task) => void;
+  onShowAIOptions?: (task: Task) => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, onToggle, onDelete, onStartTimer }) => {
+const TaskList: React.FC<TaskListProps> = ({ 
+  tasks, 
+  onToggle, 
+  onDelete, 
+  onStartTimer,
+  onShowAIOptions
+}) => {
   if (tasks.length === 0) {
     return (
       <div className="p-8 text-center border border-dashed rounded-md bg-gray-50 dark:bg-slate-800 dark:border-slate-700">
@@ -27,6 +34,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, onToggle, onDelete, onStartT
           onToggle={onToggle}
           onDelete={onDelete}
           onStartTimer={onStartTimer}
+          onShowAIOptions={onShowAIOptions}
         />
       ))}
     </div>

@@ -10,6 +10,8 @@ export interface Task {
   text: string;
   completed: boolean;
   timeInMinutes?: number;
+  priority?: 'high' | 'medium' | 'low';
+  sentiment?: 'positive' | 'negative' | 'neutral';
 }
 
 interface TaskItemProps {
@@ -17,13 +19,32 @@ interface TaskItemProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onStartTimer?: (task: Task) => void;
+  onShowAIOptions?: (task: Task) => void;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onDelete, onStartTimer }) => {
+const TaskItem: React.FC<TaskItemProps> = ({ 
+  task, 
+  onToggle, 
+  onDelete, 
+  onStartTimer,
+  onShowAIOptions
+}) => {
+  const getPriorityColor = () => {
+    if (!task.priority) return "";
+    
+    switch(task.priority) {
+      case 'high': return "border-l-4 border-l-red-500";
+      case 'medium': return "border-l-4 border-l-yellow-500";
+      case 'low': return "border-l-4 border-l-green-500";
+      default: return "";
+    }
+  };
+
   return (
     <div className={cn(
       "flex items-center justify-between p-3 mb-2 rounded-md border",
-      task.completed ? "bg-task-light border-task-completed dark:bg-slate-800 dark:border-green-700" : "bg-white border-gray-200 dark:bg-slate-800 dark:border-slate-700"
+      task.completed ? "bg-task-light border-task-completed dark:bg-slate-800 dark:border-green-700" : "bg-white border-gray-200 dark:bg-slate-800 dark:border-slate-700",
+      getPriorityColor()
     )}>
       <div className="flex items-center gap-3 flex-grow">
         <Checkbox 
@@ -41,6 +62,17 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onDelete, onStartTi
         >
           {task.text}
         </span>
+        
+        {task.priority && (
+          <span className={cn(
+            "text-xs px-2 py-0.5 rounded-full",
+            task.priority === 'high' ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" :
+            task.priority === 'medium' ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300" :
+            "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+          )}>
+            {task.priority}
+          </span>
+        )}
       </div>
       
       <div className="flex items-center gap-2">
@@ -49,6 +81,17 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onToggle, onDelete, onStartTi
             <Clock className="h-3 w-3 mr-1" />
             {task.timeInMinutes} min
           </div>
+        )}
+        
+        {!task.completed && onShowAIOptions && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onShowAIOptions(task)}
+            className="text-task hover:text-task-dark hover:bg-task-light/50 dark:hover:bg-task/30 dark:hover:text-task-light"
+          >
+            <BrainCircuit className="h-4 w-4" />
+          </Button>
         )}
         
         {!task.completed && task.timeInMinutes && onStartTimer && (
