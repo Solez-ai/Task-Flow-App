@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,48 +6,39 @@ import { ChevronDown, Clock, CheckCircle, BarChart, RefreshCw, BookOpen } from '
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { DailyStats } from '@/hooks/useDailyStats';
-
 interface DailyStatsPanelProps {
   stats: DailyStats;
   onResetStats: () => void;
 }
-
-const DailyStatsPanel: React.FC<DailyStatsPanelProps> = ({ stats, onResetStats }) => {
+const DailyStatsPanel: React.FC<DailyStatsPanelProps> = ({
+  stats,
+  onResetStats
+}) => {
   const [isOpen, setIsOpen] = React.useState(true);
 
   // Format minutes into hours and minutes
   const formatTime = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    
     if (hours > 0) {
       return `${hours}h ${mins}m`;
     }
     return `${mins}m`;
   };
-
-  return (
-    <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
-      <Collapsible
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        className="w-full"
-      >
+  return <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
         <CardHeader className="pb-2">
           <CollapsibleTrigger className="w-full text-left flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 dark:text-gray-200">
               <BarChart className="h-5 w-5 text-task dark:text-task-light" />
               Daily Stats
             </CardTitle>
-            <ChevronDown className={cn(
-              "h-4 w-4 text-muted-foreground transition-transform duration-200",
-              isOpen ? "transform rotate-180" : ""
-            )} />
+            <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", isOpen ? "transform rotate-180" : "")} />
           </CollapsibleTrigger>
         </CardHeader>
         
         <CollapsibleContent>
-          <CardContent className="pt-2">
+          <CardContent className="pt-2 my-[8px] px-[17px] py-[16px]">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex flex-col items-center p-3 rounded-lg bg-task-light dark:bg-slate-800 dark:border-slate-700 border">
                 <Badge variant="secondary" className="mb-1 bg-white/80 dark:bg-slate-700">
@@ -81,12 +71,7 @@ const DailyStatsPanel: React.FC<DailyStatsPanelProps> = ({ stats, onResetStats }
             </div>
             
             <div className="flex justify-end mt-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onResetStats}
-                className="text-muted-foreground"
-              >
+              <Button variant="outline" size="sm" onClick={onResetStats} className="text-muted-foreground">
                 <RefreshCw className="h-3 w-3 mr-1" />
                 Clear Today's Stats
               </Button>
@@ -94,8 +79,6 @@ const DailyStatsPanel: React.FC<DailyStatsPanelProps> = ({ stats, onResetStats }
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
-    </Card>
-  );
+    </Card>;
 };
-
 export default DailyStatsPanel;
