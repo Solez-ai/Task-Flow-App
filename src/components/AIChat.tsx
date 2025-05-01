@@ -43,7 +43,7 @@ const AIChat: React.FC<AIChatProps> = ({ task, onUpdateTask }) => {
         }
       ]);
     }
-  }, [task]);
+  }, [task, messages.length]);
   
   useEffect(() => {
     // Scroll to the bottom when messages change
@@ -70,7 +70,8 @@ const AIChat: React.FC<AIChatProps> = ({ task, onUpdateTask }) => {
     }
     
     try {
-      const result = await queryGemini(prompt);
+      // Pass true to include chat history for context-aware responses
+      const result = await queryGemini(prompt, true);
       
       if (result) {
         // Update task if needed
@@ -83,6 +84,10 @@ const AIChat: React.FC<AIChatProps> = ({ task, onUpdateTask }) => {
           
           if (result.timeEstimate && !task.timeInMinutes) {
             updatedTask.timeInMinutes = result.timeEstimate;
+          }
+          
+          if (result.project && !task.project) {
+            updatedTask.project = result.project;
           }
           
           if (JSON.stringify(updatedTask) !== JSON.stringify(task)) {

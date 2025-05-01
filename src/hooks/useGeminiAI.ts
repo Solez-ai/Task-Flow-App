@@ -13,19 +13,19 @@ export function useGeminiAI() {
     setError(null);
     
     try {
-      // Add current prompt to chat history
+      // Add current prompt to chat history with proper typing
+      const userMessage = { role: 'user' as const, content: prompt };
       const updatedChatHistory = includeChatHistory ? 
-        [...chatHistory, {role: 'user', content: prompt}] : 
-        [{role: 'user', content: prompt}];
+        [...chatHistory, userMessage] : 
+        [userMessage];
         
+      // Include chat history in API call to maintain context
       const result = await callGeminiAPI(prompt, includeChatHistory ? chatHistory : undefined);
       
-      // Update chat history with the response
+      // Only update chat history if we're in chat mode and got a valid response
       if (includeChatHistory && result) {
-        setChatHistory([
-          ...updatedChatHistory,
-          {role: 'assistant', content: result.text}
-        ]);
+        const assistantMessage = { role: 'assistant' as const, content: result.text };
+        setChatHistory([...updatedChatHistory, assistantMessage]);
       }
       
       setResponse(result);

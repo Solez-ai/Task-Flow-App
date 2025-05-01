@@ -9,6 +9,7 @@ export interface GeminiAPIResponse {
   priority?: 'high' | 'medium' | 'low';
   timeEstimate?: number;
   sentiment?: 'positive' | 'negative' | 'neutral';
+  project?: string;
 }
 
 interface ChatMessage {
@@ -110,119 +111,70 @@ export const callGeminiAPI = async (
     };
   }
   
-  if (prompt.includes('suggest break')) {
-    // Break suggestions
-    const breaks = [
-      "Take a short 5-minute walk to refresh your mind.",
-      "Try a quick stretching session for 3 minutes.",
-      "Practice deep breathing for 2 minutes to improve focus.",
-      "Consider a quick hydration break - drink a glass of water.",
-      "Look away from your screen and focus on a distant object for 20 seconds.",
-      "Do a quick mindfulness exercise - focus on your breathing for 1 minute.",
-      "Stand up and do 10 jumping jacks to get your blood flowing.",
-      "Make yourself a cup of tea or coffee.",
-      "Listen to one song that you enjoy before returning to work."
-    ];
-    
-    // Select 2-3 random break suggestions
-    const shuffled = [...breaks].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, Math.floor(Math.random() * 2) + 2);
-    
-    return {
-      text: "Here are some break activities that can help refresh your mind:",
-      suggestions: selected
-    };
-  }
-  
-  if (prompt.includes('productivity insights')) {
-    // Extract completion rate from prompt
-    const completionRateMatch = prompt.match(/Completion rate: (\d+)%/);
-    const completionRate = completionRateMatch ? parseInt(completionRateMatch[1]) : 0;
-    const totalTasksMatch = prompt.match(/Total tasks: (\d+)/);
-    const totalTasks = totalTasksMatch ? parseInt(totalTasksMatch[1]) : 0;
-    
-    if (totalTasks === 0) {
-      return {
-        text: "You haven't added any tasks yet. Start by adding a few tasks to track your productivity.",
-        suggestions: [
-          "Add tasks that are important to you",
-          "Break large projects into smaller tasks",
-          "Set realistic time estimates"
-        ]
-      };
-    }
-    
-    if (completionRate >= 80) {
-      return {
-        text: `Great job! You've completed ${completionRate}% of your tasks. You're being highly productive today.`,
-        suggestions: [
-          "Consider tackling a challenging task next",
-          "Take a short break to maintain your momentum",
-          "Review your completed tasks and celebrate your progress"
-        ]
-      };
-    } else if (completionRate >= 50) {
-      return {
-        text: `You're making good progress with a ${completionRate}% completion rate. Keep up the momentum!`,
-        suggestions: [
-          "Focus on completing one more task before taking a longer break",
-          "Group similar remaining tasks together for efficiency",
-          "Consider using the Pomodoro technique for your next task"
-        ]
-      };
-    } else {
-      return {
-        text: `You've completed ${completionRate}% of your tasks. Let's work on improving your productivity.`,
-        suggestions: [
-          "Start with the smallest or easiest task to build momentum",
-          "Break down complex tasks into smaller steps",
-          "Try a 25-minute focused work session with no distractions"
-        ]
-      };
-    }
-  }
-  
-  if (prompt.includes('daily plan')) {
-    // Parse tasks from the prompt
-    const taskLines = prompt.split('\n').filter(line => line.trim().startsWith('-'));
-    
-    if (taskLines.length === 0) {
-      return {
-        text: "You don't have any incomplete tasks. Add some tasks to get a suggested daily plan.",
-        suggestions: ["Add some tasks to get started"]
-      };
-    }
-    
-    return {
-      text: "Here's a suggested plan for tackling your tasks efficiently:",
-      suggestions: [
-        "Start your day with a 25-minute focus session on your highest priority task",
-        "Group similar tasks together to minimize context switching",
-        "Schedule breaks between task blocks to maintain mental energy",
-        "End your day by reviewing what you've accomplished and planning for tomorrow"
-      ]
-    };
-  }
-  
-  // Handle general chat messages
+  // Handle general chat messages with better context awareness
   if (chatHistory && chatHistory.length > 0) {
-    const responses = [
-      "I can help you manage your tasks more effectively. Would you like suggestions on prioritization?",
-      "Consider breaking down large tasks into smaller, more manageable pieces.",
-      "Setting realistic time estimates can help you plan your day better.",
-      "I notice you're working on several tasks. Is there a specific one you'd like to focus on?",
-      "Would you like me to analyze this task and suggest a priority level?",
-      "I can help you estimate how long this task might take to complete.",
-      "Using project tags can help you organize related tasks together.",
-      "Remember to take breaks between tasks to maintain productivity.",
+    // If the prompt contains specific topics, respond accordingly
+    const promptLower = prompt.toLowerCase();
+    
+    // Check for specific topics in the conversation
+    if (promptLower.includes('photosynthesis') || promptLower.includes('biology')) {
+      return {
+        text: "For your assignment on photosynthesis, here are some key points to include:\n\n" +
+             "1. Photosynthesis is the process plants use to convert light energy into chemical energy\n" +
+             "2. Key components: chlorophyll, carbon dioxide, water, and sunlight\n" +
+             "3. The process produces glucose and oxygen as byproducts\n" +
+             "4. It takes place in the chloroplasts, primarily in the leaves\n" +
+             "5. There are two main stages: light-dependent reactions and light-independent reactions (Calvin cycle)\n\n" +
+             "Would you like me to elaborate on any of these points or suggest a structure for your essay?"
+      };
+    }
+    
+    if (promptLower.includes('pointer') || promptLower.includes('suggest')) {
+      return {
+        text: "Here are some general pointers for your task:\n\n" +
+             "1. Break it down into smaller subtasks\n" +
+             "2. Set a specific time to work on it\n" +
+             "3. Eliminate distractions while working\n" +
+             "4. Use the Pomodoro technique (25 minutes focus, 5 minute break)\n" +
+             "5. Track your progress to maintain motivation\n\n" +
+             "Is there a specific aspect of this task you're struggling with?"
+      };
+    }
+    
+    // Default responses for general conversation, avoiding repetition
+    const conversationalResponses = [
+      "I can help you manage this task more effectively. Would you like some specific advice on how to approach it?",
+      "Would it help to break this task down into smaller steps? I can help you create a plan.",
+      "Is there a particular aspect of this task that you're finding challenging?",
+      "Have you set a deadline for this task? Setting time constraints can improve focus and productivity.",
+      "Would you like me to help you prioritize this task relative to your other responsibilities?",
+      "Is there any specific information or resources you need to complete this task successfully?",
+      "Let me know if you need help organizing your approach to this task."
     ];
     
+    // Use the last message to determine context and avoid repetition
+    const lastUserMessage = chatHistory.filter(msg => msg.role === 'user').pop();
+    const lastBotMessage = chatHistory.filter(msg => msg.role === 'assistant').pop();
+    
+    // Filter out responses similar to the last bot message to avoid repetition
+    let filteredResponses = conversationalResponses;
+    if (lastBotMessage) {
+      filteredResponses = conversationalResponses.filter(response => 
+        !lastBotMessage.content.includes(response.substring(0, 20))
+      );
+    }
+    
+    // If we've filtered everything, use the original list
+    if (filteredResponses.length === 0) {
+      filteredResponses = conversationalResponses;
+    }
+    
     return {
-      text: responses[Math.floor(Math.random() * responses.length)]
+      text: filteredResponses[Math.floor(Math.random() * filteredResponses.length)]
     };
   }
   
-  // Default response for other queries
+  // Default response for other queries without chat history
   return {
     text: "I'm here to help you stay productive. What would you like assistance with?",
     suggestions: [
