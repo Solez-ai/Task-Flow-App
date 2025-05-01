@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Task } from './TaskItem';
@@ -10,14 +10,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { CalendarCheck } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 
 interface TaskCalendarProps {
@@ -26,26 +20,9 @@ interface TaskCalendarProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type ColorCode = 'default' | 'blue' | 'green' | 'amber' | 'pink';
-
-interface DateColors {
-  [date: string]: ColorCode;
-}
-
 const TaskCalendar: React.FC<TaskCalendarProps> = ({ tasks, open, onOpenChange }) => {
   const { theme } = useTheme();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [colorCoding, setColorCoding] = useState<ColorCode>('default');
-  const [dateColors, setDateColors] = useState<DateColors>(() => {
-    // Load saved colors from localStorage on initial load
-    const savedColors = localStorage.getItem('focusflow-calendar-colors');
-    return savedColors ? JSON.parse(savedColors) : {};
-  });
-
-  // Save date colors to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('focusflow-calendar-colors', JSON.stringify(dateColors));
-  }, [dateColors]);
 
   // Get completed tasks by date
   const getTasksForDate = (date: Date): Task[] => {
@@ -64,72 +41,23 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({ tasks, open, onOpenChange }
       .map(task => new Date(task.completedAt as string));
   };
 
-  // Apply color to selected date and save it
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      // Only update color if user has selected a color different from default
-      if (colorCoding !== 'default') {
-        setDateColors(prev => ({
-          ...prev,
-          [dateStr]: colorCoding
-        }));
-      }
-    }
-    setSelectedDate(date);
-  };
-
   const tasksForSelectedDate = selectedDate ? getTasksForDate(selectedDate) : [];
-  const modifiers = { completed: getDaysWithTasks() };
+  const daysWithCompletedTasks = getDaysWithTasks();
 
-  // Custom day rendering for color coding
-  const getColorClass = (date?: Date): string => {
-    if (!date) return '';
-    
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const savedColor = dateColors[dateStr];
-    
-    if (savedColor) {
-      switch (savedColor) {
-        case 'blue':
-          return 'bg-blue-500 text-white';
-        case 'green':
-          return 'bg-green-500 text-white';
-        case 'amber':
-          return 'bg-amber-500 text-white';
-        case 'pink':
-          return 'bg-pink-500 text-white';
-        default:
-          return theme === 'dark' 
-            ? 'bg-task dark:text-white' 
-            : 'bg-task-light text-task-dark';
-      }
-    }
-    
-    // Default color for selected day without a saved color
-    return theme === 'dark' 
-      ? 'bg-slate-700 text-white' 
-      : 'bg-task-light text-task-dark';
+  // Custom day rendering for completed tasks
+  const hasCompletedTask = (date: Date): boolean => {
+    return daysWithCompletedTasks.some(taskDate => 
+      format(taskDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
+    );
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] dark:bg-slate-900 dark:border-slate-800">
+      <DialogContent className="sm:max-w-[400px] dark:bg-slate-900 dark:border-slate-800">
         <DialogHeader>
-          <DialogTitle className="text-task-dark dark:text-task flex items-center justify-between">
+          <DialogTitle className="text-task-dark dark:text-task flex items-center gap-2">
+            <CalendarCheck className="h-5 w-5" />
             Task Calendar
-            <Select value={colorCoding} onValueChange={(value: ColorCode) => setColorCoding(value)}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Color" />
-              </SelectTrigger>
-              <SelectContent className="dark:bg-slate-800">
-                <SelectItem value="default">Purple</SelectItem>
-                <SelectItem value="blue">Blue</SelectItem>
-                <SelectItem value="green">Green</SelectItem>
-                <SelectItem value="amber">Amber</SelectItem>
-                <SelectItem value="pink">Pink</SelectItem>
-              </SelectContent>
-            </Select>
           </DialogTitle>
           <DialogDescription className="dark:text-gray-400">
             Track your productivity and completed tasks
@@ -139,20 +67,16 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({ tasks, open, onOpenChange }
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={handleDateSelect}
+            onSelect={setSelectedDate}
             className="rounded-md border dark:border-slate-700 w-full"
-            modifiers={modifiers}
-            modifiersStyles={{
-              completed: { 
-                fontWeight: 'bold',
-                textDecoration: 'underline'
-              }
+            modifiers={{
+              completed: daysWithCompletedTasks
             }}
             modifiersClassNames={{
-              selected: getColorClass(selectedDate)
+              completed: "bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700"
             }}
             styles={{
-              day: { margin: '0.15rem' },
+              day: { margin: '0' },
               caption: { padding: '0.5rem' },
               nav_button: { 
                 color: theme === 'dark' ? 'white' : 'black',
@@ -160,8 +84,7 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({ tasks, open, onOpenChange }
               },
               table: { 
                 width: '100%', 
-                tableLayout: 'fixed',
-                borderSpacing: '0.25rem'
+                tableLayout: 'fixed'
               }
             }}
           />
@@ -176,7 +99,7 @@ const TaskCalendar: React.FC<TaskCalendarProps> = ({ tasks, open, onOpenChange }
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {tasksForSelectedDate.map((task) => (
                   <div key={task.id} className="flex items-center space-x-2 text-sm">
-                    <Badge variant="outline" className="bg-task-light dark:bg-task/20">
+                    <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
                       {task.text}
                     </Badge>
                   </div>
