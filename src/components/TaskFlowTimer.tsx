@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 import Timer from './Timer';
+import DailyStatsPanel from './DailyStatsPanel';
 import { Task } from './TaskItem';
+import { useDailyStats } from '@/hooks/useDailyStats';
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -16,6 +18,7 @@ const TaskFlowTimer: React.FC = () => {
   });
   
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const { stats, addPomodoroSession, addCompletedTask, resetStats } = useDailyStats();
 
   useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
@@ -34,9 +37,17 @@ const TaskFlowTimer: React.FC = () => {
 
   const toggleTask = (id: string) => {
     setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
+      tasks.map((task) => {
+        if (task.id === id) {
+          const newCompleted = !task.completed;
+          // If task is being marked as completed, update daily stats
+          if (newCompleted) {
+            addCompletedTask();
+          }
+          return { ...task, completed: newCompleted };
+        }
+        return task;
+      })
     );
   };
 
@@ -49,12 +60,20 @@ const TaskFlowTimer: React.FC = () => {
   };
 
   const handleSessionComplete = () => {
+    // Update daily stats
+    const sessionLength = activeTask?.timeInMinutes || 25;
+    addPomodoroSession(sessionLength);
+    
     // If completing a task-specific timer, mark that task as complete
     if (activeTask) {
       setTasks(
-        tasks.map((task) =>
-          task.id === activeTask.id ? { ...task, completed: true } : task
-        )
+        tasks.map((task) => {
+          if (task.id === activeTask.id) {
+            addCompletedTask(); // Count as completed task
+            return { ...task, completed: true };
+          }
+          return task;
+        })
       );
       toast.success(`Task "${activeTask.text}" completed!`);
       setActiveTask(null);
@@ -86,6 +105,8 @@ const TaskFlowTimer: React.FC = () => {
         activeTask={activeTask}
         onResetActiveTask={() => setActiveTask(null)}
       />
+      
+      <DailyStatsPanel stats={stats} onResetStats={resetStats} />
       
       <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
         <CardHeader>
