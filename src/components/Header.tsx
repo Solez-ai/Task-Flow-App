@@ -99,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({
           <div className="space-y-4 dark:text-gray-300">
             <p>FocusFlow is a productivity app designed to help you stay organized, manage your tasks, and maximize your productivity using a simple, minimalist interface. The app integrates the Pomodoro Technique with advanced task tracking and time management features to make sure you stay focused and on top of your goals.</p>
             
-            <h3 className="text-lg font-semibold mt-4 dark:text-gray-200">Key Features:</h3>
+            <h3 className="text-lg font-semibold mt-4 dark:text-gray-200">Key Features: (All AI Based Features Are not Out Yet !)</h3>
             <ul className="list-disc pl-5 space-y-2">
               <li><strong>Pomodoro Timer:</strong> FocusFlow uses the Pomodoro Technique, which breaks work into intervals, typically 25 minutes long, followed by short breaks. This technique helps improve focus and reduces mental fatigue.</li>
               <li><strong>Task Management:</strong> Add, track, and prioritize tasks effortlessly. FocusFlow lets you categorize tasks, set deadlines, and organize your day around your most important work.</li>
@@ -113,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({
             <h3 className="text-lg font-semibold mt-4 dark:text-gray-200">How FocusFlow Works:</h3>
             <p>FocusFlow is designed with simplicity in mind. You can easily add tasks to your list, assign priorities, and start your Pomodoro sessions. The app will handle the rest—tracking your time, suggesting breaks, and keeping you focused on your goals. Whether you're tackling large projects or small to-dos, FocusFlow keeps you productive without overwhelming you with unnecessary features.</p>
             
-            <h3 className="text-lg font-semibold mt-4 dark:text-gray-200">The Power of AI:</h3>
+            <h3 className="text-lg font-semibold mt-4 dark:text-gray-200">The Power of AI: (Coming Soon)</h3>
             <p>FocusFlow integrates the Gemini API to enhance the app's functionality with AI-driven features. The AI helps with tasks like:</p>
             <ul className="list-disc pl-5 space-y-2">
               <li>Automatically prioritizing your tasks.</li>
