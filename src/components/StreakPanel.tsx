@@ -1,13 +1,16 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
 interface StreakPanelProps {
   streak: number;
   completedToday: number;
 }
+
 const StreakPanel: React.FC<StreakPanelProps> = ({
   streak,
   completedToday
@@ -25,7 +28,9 @@ const StreakPanel: React.FC<StreakPanelProps> = ({
   const totalDayMilliseconds = 24 * 60 * 60 * 1000;
   const millisecondsPassed = endOfDay.getTime() - now.getTime();
   const timeProgress = 100 - millisecondsPassed / totalDayMilliseconds * 100;
-  return <Card className="mt-2 dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
+
+  return (
+    <Card className="mt-2 dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
       <CardContent className="p-4 my-[11px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -53,9 +58,16 @@ const StreakPanel: React.FC<StreakPanelProps> = ({
             <span>Today's progress</span>
             <span>{Math.min(100, Math.round(timeProgress))}% of day elapsed</span>
           </div>
-          <Progress value={Math.min(100, Math.round(timeProgress))} className={cn("h-2", timeProgress > 80 ? "bg-red-200 [&>div]:bg-red-500" : timeProgress > 50 ? "bg-amber-200 [&>div]:bg-amber-500" : "bg-green-200 [&>div]:bg-green-500")} />
+          <Progress value={Math.min(100, Math.round(timeProgress))} className={cn(
+            "h-2", 
+            timeProgress > 80 ? "bg-red-200 [&>div]:bg-red-500" : 
+            timeProgress > 50 ? "bg-amber-200 [&>div]:bg-amber-500" : 
+            "bg-green-200 [&>div]:bg-green-500"
+          )} />
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default StreakPanel;

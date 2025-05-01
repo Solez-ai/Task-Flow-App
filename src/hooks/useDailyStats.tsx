@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 export interface DailyStats {
@@ -76,15 +77,19 @@ export const useDailyStats = () => {
       // Update streak logic
       let newStreak = prev.streak;
       
-      // If this is at least the second task, start or continue streak
-      if (newCompletedTasks >= 2) {
-        newStreak += (prev.streak === 0) ? 1 : 0; // Increment only when starting a new streak
+      // If this is the second task completed today, start a streak if there wasn't one
+      if (newCompletedTasks === 2) {
+        newStreak = newStreak === 0 ? 1 : newStreak;
+      }
+      // If we already have 2 or more tasks completed and there was no streak, start one
+      else if (newCompletedTasks > 2 && newStreak === 0) {
+        newStreak = 1;
       }
       
       return {
         ...prev,
         completedTasks: newCompletedTasks,
-        streak: newStreak > 0 ? newStreak : (newCompletedTasks >= 2 ? 1 : 0),
+        streak: newStreak,
         lastTaskDate: today
       };
     });
