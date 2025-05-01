@@ -2,7 +2,8 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2, Play, Clock, BrainCircuit } from 'lucide-react';
+import { Trash2, Play, Clock } from 'lucide-react';
+import { BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface Task {
