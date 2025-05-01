@@ -34,8 +34,9 @@ const Calculator: React.FC<CalculatorProps> = ({ open, onOpenChange }) => {
   const handleOperationClick = (operation: string) => {
     if (previousValue !== null && !resetDisplay) {
       const result = calculateResult(previousValue, parseFloat(display), currentOperation!);
-      setDisplay(String(result));
-      setPreviousValue(result);
+      // Fixed: Convert result to string before setting display
+      setDisplay(typeof result === 'number' ? String(result) : result);
+      setPreviousValue(typeof result === 'number' ? result : previousValue);
     } else {
       setPreviousValue(parseFloat(display));
     }
@@ -44,7 +45,7 @@ const Calculator: React.FC<CalculatorProps> = ({ open, onOpenChange }) => {
     setResetDisplay(true);
   };
 
-  const calculateResult = (num1: number, num2: number, operation: string) => {
+  const calculateResult = (num1: number, num2: number, operation: string): number | string => {
     switch (operation) {
       case '+':
         return num1 + num2;
@@ -62,7 +63,7 @@ const Calculator: React.FC<CalculatorProps> = ({ open, onOpenChange }) => {
   const handleEquals = () => {
     if (currentOperation && previousValue !== null) {
       const result = calculateResult(previousValue, parseFloat(display), currentOperation);
-      setDisplay(String(result));
+      setDisplay(typeof result === 'number' ? String(result) : result);
       setCurrentOperation(null);
       setPreviousValue(null);
       setResetDisplay(true);
