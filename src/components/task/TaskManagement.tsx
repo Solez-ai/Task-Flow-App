@@ -21,6 +21,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 }) => {
   const {
     addCompletedTask,
+    stats
   } = useStats();
   
   const {
@@ -60,8 +61,11 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           addCompletedTask();
           // Track for badges
           const totalTasks = trackTaskCompletion();
-          // Check for badges with today's task count
-          processStats(tasks.filter(t => t.completed).length + 1);
+          // Check for badges with updated stats
+          processStats({
+            ...stats,
+            completedTasks: stats.completedTasks + 1
+          });
         }
         
         return updatedTask;
