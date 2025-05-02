@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Array of motivational quotes
+// Array of motivational messages
 const motivationalMessages = [
   "Discipline isn't loud — it's the quiet decision to show up when no one's watching.",
   "You don't need more time. You need more intention.",
@@ -123,7 +123,7 @@ const MotivationalPopup = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-white to-purple-50 dark:from-slate-900 dark:to-slate-800 p-8 md:p-10 rounded-lg shadow-lg border border-purple-100 dark:border-slate-700"
+            className="bg-gradient-to-br from-white to-purple-50 dark:from-slate-900/80 dark:to-slate-800/70 p-8 md:p-10 rounded-lg shadow-lg border border-purple-100 dark:border-blue-700/30"
           >
             <Button 
               variant="ghost" 
@@ -135,8 +135,8 @@ const MotivationalPopup = () => {
             </Button>
             
             <div className="flex flex-col items-center text-center space-y-6">
-              <div className="bg-purple-100 dark:bg-slate-700/50 h-16 w-16 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 dark:text-purple-400">
+              <div className="bg-purple-100 dark:bg-blue-700/30 h-16 w-16 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 dark:text-blue-400">
                   <path d="M16.5 9.4 7.5 4.21"></path>
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                   <path d="M3.29 7 12 12l8.71-5"></path>
@@ -144,20 +144,20 @@ const MotivationalPopup = () => {
                 </svg>
               </div>
               
-              <h2 className="text-xl md:text-2xl font-semibold text-gray-800 dark:text-gray-100">Your Daily Inspiration</h2>
+              <h2 className="text-xl md:text-2xl font-semibold text-gray-800 dark:text-blue-100">Your Daily Inspiration</h2>
               
               <motion.p 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.7 }}
-                className="text-gray-700 dark:text-gray-300 text-base md:text-lg font-medium"
+                className="text-gray-700 dark:text-blue-50 text-base md:text-lg font-medium"
               >
                 "{message}"
               </motion.p>
               
               <Button 
                 onClick={() => setOpen(false)}
-                className="mt-4 bg-purple-600 hover:bg-purple-700 text-white dark:bg-purple-700 dark:hover:bg-purple-800"
+                className="mt-4 bg-purple-600 hover:bg-purple-700 text-white dark:bg-blue-600/80 dark:hover:bg-blue-700/90 dark:text-blue-50"
               >
                 Start Focusing
               </Button>

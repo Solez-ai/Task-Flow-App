@@ -41,3 +41,54 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Dark mode ocean background */
+.dark body {
+  background-color: hsl(222.2 84% 4.9%);
+  position: relative;
+}
+
+.dark body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/lovable-uploads/630418e2-621d-4609-acf1-8662fd0f8f12.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.25;
+  mix-blend-mode: screen;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Make sure components maintain readability with semi-transparent backgrounds */
+.dark .bg-gradient-to-br {
+  backdrop-filter: blur(4px);
+}
+
+.dark .card,
+.dark .dialog-content {
+  background-color: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+/* Small animation for the waves effect */
+@keyframes subtle-wave {
+  0% {
+    background-position: center;
+  }
+  50% {
+    background-position: center 5%;
+  }
+  100% {
+    background-position: center;
+  }
+}
+
+.dark body::before {
+  animation: subtle-wave 20s ease-in-out infinite;
+}
