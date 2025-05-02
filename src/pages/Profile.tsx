@@ -101,11 +101,13 @@ const Profile: React.FC = () => {
     
     setLoading(true);
     try {
+      const updatedAt = new Date().toISOString(); // Convert Date to string
+      
       const { error } = await supabase
         .from('profiles')
         .update({
           username,
-          updated_at: new Date(),
+          updated_at: updatedAt,
         })
         .eq('id', user.id);
 
