@@ -70,90 +70,88 @@ const Auth: React.FC = () => {
 
         <Card className="dark:bg-slate-900 dark:border-slate-800">
           <CardHeader className="pb-4">
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid grid-cols-2 mb-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
+            
+              <TabsContent value="login" className="mt-0">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium dark:text-gray-200">Email</label>
+                    <Input
+                      id="email" 
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="your@email.com"
+                      className="dark:bg-slate-800 dark:border-slate-700"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="password" className="text-sm font-medium dark:text-gray-200">Password</label>
+                    </div>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="dark:bg-slate-800 dark:border-slate-700"
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={loading} 
+                    className="w-full bg-task hover:bg-task-dark dark:bg-task dark:hover:bg-task-dark"
+                  >
+                    {loading ? 'Signing in...' : 'Sign In'}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="signup" className="mt-0">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="signup-email" className="text-sm font-medium dark:text-gray-200">Email</label>
+                    <Input
+                      id="signup-email" 
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="your@email.com"
+                      className="dark:bg-slate-800 dark:border-slate-700"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="signup-password" className="text-sm font-medium dark:text-gray-200">Password</label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="dark:bg-slate-800 dark:border-slate-700"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Password must be at least 6 characters</p>
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={loading} 
+                    className="w-full bg-task hover:bg-task-dark dark:bg-task dark:hover:bg-task-dark"
+                  >
+                    {loading ? 'Creating Account...' : 'Create Account'}
+                  </Button>
+                </form>
+              </TabsContent>
             </Tabs>
           </CardHeader>
-
-          <CardContent>
-            <TabsContent value="login" className="mt-0">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium dark:text-gray-200">Email</label>
-                  <Input
-                    id="email" 
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    placeholder="your@email.com"
-                    className="dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="password" className="text-sm font-medium dark:text-gray-200">Password</label>
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    className="dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={loading} 
-                  className="w-full bg-task hover:bg-task-dark dark:bg-task dark:hover:bg-task-dark"
-                >
-                  {loading ? 'Signing in...' : 'Sign In'}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup" className="mt-0">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="signup-email" className="text-sm font-medium dark:text-gray-200">Email</label>
-                  <Input
-                    id="signup-email" 
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    placeholder="your@email.com"
-                    className="dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="signup-password" className="text-sm font-medium dark:text-gray-200">Password</label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    className="dark:bg-slate-800 dark:border-slate-700"
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Password must be at least 6 characters</p>
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={loading} 
-                  className="w-full bg-task hover:bg-task-dark dark:bg-task dark:hover:bg-task-dark"
-                >
-                  {loading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-              </form>
-            </TabsContent>
-          </CardContent>
 
           <CardFooter className="flex flex-col space-y-4 pt-0">
             <div className="text-xs text-center text-gray-500 dark:text-gray-400 mt-4">
