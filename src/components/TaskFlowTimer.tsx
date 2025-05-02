@@ -153,7 +153,7 @@ const TaskFlowTimer: React.FC = () => {
           onResetActiveTask={() => setActiveTask(null)}
         />
         
-        {/* Task Form - Now positioned above the Music Player */}
+        {/* Complete Task Section - Positioned Above Music Player */}
         <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
           <CardHeader>
             <CardTitle className="dark:text-gray-200">Add New Task</CardTitle>
@@ -162,16 +162,6 @@ const TaskFlowTimer: React.FC = () => {
             <TaskForm onAddTask={addTask} />
           </CardContent>
         </Card>
-        
-        {/* Music Player positioned below the Task Form */}
-        <MusicPlayer />
-        
-        <DailyStatsPanel stats={stats} onResetStats={resetStats} />
-        
-        <StreakPanel 
-          streak={stats.streak} 
-          completedToday={stats.completedTasks} 
-        />
         
         <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
           <CardHeader>
@@ -190,6 +180,16 @@ const TaskFlowTimer: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Music Player now appears below the entire Task section */}
+        <MusicPlayer />
+        
+        <DailyStatsPanel stats={stats} onResetStats={resetStats} />
+        
+        <StreakPanel 
+          streak={stats.streak} 
+          completedToday={stats.completedTasks} 
+        />
       </div>
     </div>
   );
