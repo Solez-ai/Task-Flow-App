@@ -9,6 +9,10 @@ import TaskManagement from './task/TaskManagement';
 import TimerSection from './timer/TimerSection';
 import MusicSection from './music/MusicSection';
 import StatisticsSection from './stats/StatisticsSection';
+import { useSupabaseSync } from '@/hooks/useSupabaseSync';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserTracks } from '@/hooks/useUserTracks';
+import { Navigate } from 'react-router-dom';
 
 const TaskFlowTimer: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -16,6 +20,9 @@ const TaskFlowTimer: React.FC = () => {
     return savedTasks ? JSON.parse(savedTasks) : [];
   });
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  
+  const { userTracks } = useUserTracks();
+  const { user } = useAuth();
   
   const {
     stats,
@@ -27,6 +34,9 @@ const TaskFlowTimer: React.FC = () => {
   const {
     processStats,
   } = useBadges();
+
+  // Set up data sync with Supabase when user is authenticated
+  useSupabaseSync(tasks, userTracks);
 
   // Process stats for badges
   useEffect(() => {

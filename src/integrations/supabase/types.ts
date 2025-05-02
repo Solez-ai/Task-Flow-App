@@ -9,7 +9,156 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          important: boolean | null
+          note: string | null
+          text: string
+          time_in_minutes: number | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          important?: boolean | null
+          note?: string | null
+          text: string
+          time_in_minutes?: number | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          important?: boolean | null
+          note?: string | null
+          text?: string
+          time_in_minutes?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          category: string
+          description: string
+          earned_at: string | null
+          icon: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          category: string
+          description: string
+          earned_at?: string | null
+          icon: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          category?: string
+          description?: string
+          earned_at?: string | null
+          icon?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_music: {
+        Row: {
+          artist: string
+          created_at: string | null
+          id: string
+          storage_path: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          artist: string
+          created_at?: string | null
+          id?: string
+          storage_path: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          artist?: string
+          created_at?: string | null
+          id?: string
+          storage_path?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          completed_tasks: number | null
+          date: string
+          focused_time_minutes: number | null
+          id: string
+          pomodoro_sessions: number | null
+          study_mode_rounds: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_tasks?: number | null
+          date: string
+          focused_time_minutes?: number | null
+          id?: string
+          pomodoro_sessions?: number | null
+          study_mode_rounds?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_tasks?: number | null
+          date?: string
+          focused_time_minutes?: number | null
+          id?: string
+          pomodoro_sessions?: number | null
+          study_mode_rounds?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -7,9 +7,14 @@ import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import AboutDialog from './AboutDialog';
 import PrivacyDialog from './PrivacyDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const HeaderActions: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
   const [aboutDialogOpen, setAboutDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
 
@@ -18,6 +23,22 @@ const HeaderActions: React.FC = () => {
       description: "We're working on intelligent features to help you be more productive!",
       duration: 3000,
     });
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  const handleAuthClick = () => {
+    if (user) {
+      signOut();
+    } else {
+      navigate('/auth');
+    }
+  };
+
+  const getInitials = (email: string) => {
+    return email.substring(0, 2).toUpperCase();
   };
 
   return (
@@ -57,15 +78,35 @@ const HeaderActions: React.FC = () => {
           </DropdownMenuContent>
         </DropdownMenu>
         
-        {/* Account (placeholder) - Updated styling for better dark/light mode handling */}
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-gray-300 hover:bg-slate-100 transition-colors"
-        >
-          <User className="mr-1 h-4 w-4" />
-          <span>Account</span>
-        </Button>
+        {/* Account/Profile Button */}
+        {user ? (
+          <Button 
+            onClick={handleProfileClick}
+            size="sm" 
+            variant="outline"
+            className="bg-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-gray-300 hover:bg-slate-100 transition-colors flex items-center gap-2"
+          >
+            <Avatar className="h-5 w-5">
+              {profile?.avatar_url ? (
+                <AvatarImage src={profile.avatar_url} alt="Profile" />
+              ) : (
+                <AvatarFallback className="bg-task text-white text-xs">
+                  {user.email ? getInitials(user.email) : <User className="h-3 w-3" />}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <span className="hidden sm:inline">Profile</span>
+          </Button>
+        ) : (
+          <Button 
+            onClick={handleAuthClick}
+            size="sm" 
+            className="bg-task hover:bg-task-dark text-white transition-colors"
+          >
+            <User className="mr-1 h-4 w-4" />
+            <span>Sign In</span>
+          </Button>
+        )}
       </div>
 
       {/* Dialogs */}
