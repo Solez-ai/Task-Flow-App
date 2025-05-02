@@ -220,9 +220,9 @@ const TaskFlowTimer: React.FC = () => {
           <MusicPlayer />
         </div>
         
-        <DailyStatsPanel stats={stats} onResetStats={resetStats} />
+        <DailyStatsPanel />
         
-        <StreakPanel streak={stats.streak} completedToday={stats.completedTasks} />
+        <StreakPanel />
       </div>
     </div>
   );
