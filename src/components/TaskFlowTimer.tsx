@@ -153,36 +153,43 @@ const TaskFlowTimer: React.FC = () => {
           onResetActiveTask={() => setActiveTask(null)}
         />
         
-        {/* Complete Task Section - Positioned Above Music Player */}
-        <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
-          <CardHeader>
-            <CardTitle className="dark:text-gray-200">Add New Task</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TaskForm onAddTask={addTask} />
-          </CardContent>
-        </Card>
+        {/* TASK SECTION - Clearly separated from music */}
+        <div className="mt-8 mb-10">
+          <h2 className="text-xl font-semibold mb-4 text-task-dark dark:text-task">Task Management</h2>
+          
+          <Card className="mb-6 dark:bg-slate-900 dark:border-slate-800">
+            <CardHeader>
+              <CardTitle className="dark:text-gray-200">Add New Task</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TaskForm onAddTask={addTask} />
+            </CardContent>
+          </Card>
+          
+          <Card className="dark:bg-slate-900 dark:border-slate-800">
+            <CardHeader>
+              <CardTitle className="dark:text-gray-200">Tasks</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mt-4">
+                <TaskList 
+                  tasks={tasks} 
+                  onToggle={toggleTask} 
+                  onDelete={deleteTask}
+                  onStartTimer={startTaskTimer}
+                  onUpdateNote={updateTaskNote}
+                  onToggleImportant={toggleImportant}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         
-        <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
-          <CardHeader>
-            <CardTitle className="dark:text-gray-200">Tasks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="mt-4">
-              <TaskList 
-                tasks={tasks} 
-                onToggle={toggleTask} 
-                onDelete={deleteTask}
-                onStartTimer={startTaskTimer}
-                onUpdateNote={updateTaskNote}
-                onToggleImportant={toggleImportant}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Music Player now appears below the entire Task section */}
-        <MusicPlayer />
+        {/* MUSIC SECTION - Clearly separated from tasks */}
+        <div className="mt-10 mb-8">
+          <h2 className="text-xl font-semibold mb-4 text-task-dark dark:text-task">Music Player</h2>
+          <MusicPlayer />
+        </div>
         
         <DailyStatsPanel stats={stats} onResetStats={resetStats} />
         
