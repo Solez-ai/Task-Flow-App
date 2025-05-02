@@ -94,16 +94,25 @@ const MotivationalPopup = () => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   
-  // Open the popup when the component mounts
+  // Check if this is a fresh visit or just a page refresh
   useEffect(() => {
-    setMessage(getRandomMessage());
+    // Get the session storage value for visited
+    const hasVisited = sessionStorage.getItem('hasVisited');
     
-    // Small delay for better user experience
-    const timer = setTimeout(() => {
-      setOpen(true);
-    }, 800);
-    
-    return () => clearTimeout(timer);
+    // Only show the popup if this is the user's first visit in this session
+    if (!hasVisited) {
+      setMessage(getRandomMessage());
+      
+      // Small delay for better user experience
+      const timer = setTimeout(() => {
+        setOpen(true);
+      }, 800);
+      
+      // Mark that the user has visited in this session
+      sessionStorage.setItem('hasVisited', 'true');
+      
+      return () => clearTimeout(timer);
+    }
   }, []);
   
   return (
@@ -118,7 +127,7 @@ const MotivationalPopup = () => {
           >
             <Button 
               variant="ghost" 
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300" 
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 border-0 outline-none ring-0 focus:ring-0" 
               onClick={() => setOpen(false)}
             >
               <X size={20} />
