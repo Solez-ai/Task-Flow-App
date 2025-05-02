@@ -21,42 +21,48 @@ import AudioFileUploader from './AudioFileUploader';
 import MusicLibrary, { Track } from './MusicLibrary';
 
 // Define music tracks with the user's provided links
-const presetMusicTracks = [
+const presetMusicTracks: Track[] = [
   {
     id: 1,
     title: "Quiet Night",
     artist: "Lofi Beat",
-    src: "https://pixabay.com/music/beats-quiet-night-lofi-332744/"
+    src: "https://pixabay.com/music/beats-quiet-night-lofi-332744/",
+    isUserUploaded: false
   },
   {
     id: 2,
     title: "Lofi Coffee",
     artist: "Lofi Beat",
-    src: "https://pixabay.com/music/beats-lofi-coffee-332824/"
+    src: "https://pixabay.com/music/beats-lofi-coffee-332824/",
+    isUserUploaded: false
   },
   {
     id: 3,
     title: "Lofi Rain",
     artist: "Lofi Music",
-    src: "https://pixabay.com/music/beats-lofi-rain-lofi-music-332732/"
+    src: "https://pixabay.com/music/beats-lofi-rain-lofi-music-332732/",
+    isUserUploaded: false
   },
   {
     id: 4,
     title: "Coffee Lofi Chill",
     artist: "Lofi Music",
-    src: "https://pixabay.com/music/beats-coffee-lofi-chill-lofi-music-332738/"
+    src: "https://pixabay.com/music/beats-coffee-lofi-chill-lofi-music-332738/",
+    isUserUploaded: false
   },
   {
     id: 5,
     title: "Rainy Lofi City",
     artist: "Lofi Music",
-    src: "https://pixabay.com/music/beats-rainy-lofi-city-lofi-music-332746/"
+    src: "https://pixabay.com/music/beats-rainy-lofi-city-lofi-music-332746/",
+    isUserUploaded: false
   },
   {
     id: 6,
     title: "Soft Calm",
     artist: "Upbeat Background",
-    src: "https://pixabay.com/music/upbeat-background-music-soft-calm-333111/"
+    src: "https://pixabay.com/music/upbeat-background-music-soft-calm-333111/",
+    isUserUploaded: false
   }
 ];
 
