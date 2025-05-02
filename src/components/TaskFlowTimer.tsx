@@ -11,11 +11,9 @@ import { Task } from './TaskItem';
 import { useDailyStats } from '@/hooks/useDailyStats';
 import { useBadges } from '@/hooks/useBadges';
 import { toast } from 'sonner';
-import { useTheme } from '@/hooks/useTheme';
 import Header from './Header';
 
 const TaskFlowTimer: React.FC = () => {
-  const { theme } = useTheme();
   const [tasks, setTasks] = useState<Task[]>(() => {
     const savedTasks = localStorage.getItem('tasks');
     return savedTasks ? JSON.parse(savedTasks) : [];
@@ -183,7 +181,7 @@ const TaskFlowTimer: React.FC = () => {
           onResetActiveTask={() => setActiveTask(null)} 
         />
         
-        {/* TASK SECTION - Clearly separated from music */}
+        {/* TASK SECTION */}
         <div className="mt-8 mb-10">
           <h2 className="text-xl font-semibold mb-4 text-task-dark dark:text-task">Task Management</h2>
           
@@ -215,7 +213,7 @@ const TaskFlowTimer: React.FC = () => {
           </Card>
         </div>
         
-        {/* MUSIC SECTION - Clearly separated from tasks */}
+        {/* MUSIC SECTION */}
         <div className="mt-10 mb-8">
           <h2 className="text-xl font-semibold mb-4 text-task-dark dark:text-task">Music Player</h2>
           <MusicPlayer />
