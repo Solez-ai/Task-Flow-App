@@ -26,13 +26,14 @@ const TaskFlowTimer: React.FC = () => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
 
-  const addTask = (text: string, timeInMinutes?: number) => {
+  const addTask = (text: string, timeInMinutes?: number, important?: boolean) => {
     const newTask = {
       id: Math.random().toString(36).substring(2, 9),
       text,
       completed: false,
       timeInMinutes,
-      note: ''
+      note: '',
+      important
     };
     setTasks([...tasks, newTask]);
     toast.success("Task added successfully!");
@@ -127,6 +128,17 @@ const TaskFlowTimer: React.FC = () => {
     );
   };
 
+  const toggleImportant = (id: string) => {
+    setTasks(
+      tasks.map((task) => {
+        if (task.id === id) {
+          return { ...task, important: !task.important };
+        }
+        return task;
+      })
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
       <Header tasks={tasks} />
@@ -161,6 +173,7 @@ const TaskFlowTimer: React.FC = () => {
                 onDelete={deleteTask}
                 onStartTimer={startTaskTimer}
                 onUpdateNote={updateTaskNote}
+                onToggleImportant={toggleImportant}
               />
             </div>
           </CardContent>
