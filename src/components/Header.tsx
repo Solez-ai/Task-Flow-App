@@ -79,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({
             </DropdownMenu>
             
             {/* Account (placeholder) */}
-            <Button variant="outline" size="sm" className="dark:border-slate-700 dark:text-gray-300 bg-slate-900 hover:bg-slate-800 rounded-sm">
+            <Button variant="outline" size="sm" className="dark:border-slate-700 dark:text-gray-300 rounded-sm bg-slate-50">
               <User className="mr-1 h-4 w-4" />
               <span>Account</span>
             </Button>
