@@ -8,6 +8,7 @@ interface TimerControlsProps {
   isRunning: boolean;
   timerMode: 'focus' | 'break' | 'study' | 'mini-focus' | 'long-break';
   studyState: 'focus' | 'break';
+  isStudyActive?: boolean; // Added this prop to check if study mode is active
   onStart: () => void;
   onPause: () => void;
   onReset: () => void;
@@ -18,6 +19,7 @@ const TimerControls: React.FC<TimerControlsProps> = ({
   isRunning,
   timerMode,
   studyState,
+  isStudyActive = false, // Default to false if not provided
   onStart,
   onPause,
   onReset,
@@ -52,8 +54,8 @@ const TimerControls: React.FC<TimerControlsProps> = ({
         <RefreshCw className="mr-2 h-4 w-4" /> Reset
       </Button>
       
-      {/* Skip button when timer is running */}
-      {isRunning && (
+      {/* Skip button - only show during study mode when timer is running */}
+      {isRunning && isStudyActive && (
         <Button 
           onClick={onSkip}
           variant="outline" 

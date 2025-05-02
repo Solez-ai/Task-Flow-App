@@ -258,6 +258,7 @@ const Timer: React.FC<TimerProps> = ({
           isRunning={timer.isRunning}
           timerMode={timerMode}
           studyState={studyState}
+          isStudyActive={isStudyActive}
           onStart={timer.start}
           onPause={timer.pause}
           onReset={timer.reset}
