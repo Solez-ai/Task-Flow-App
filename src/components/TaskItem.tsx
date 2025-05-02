@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2, Play, Clock, StickyNote, PenLine } from 'lucide-react';
+import { Trash2, Play, Clock, StickyNote, PenLine, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
   Popover,
@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 export interface Task {
   id: string;
@@ -19,6 +20,7 @@ export interface Task {
   timeInMinutes?: number;
   completedAt?: string; // When the task was completed
   note?: string; // Task notes
+  important?: boolean; // Flag for important tasks
 }
 
 interface TaskItemProps {
@@ -28,6 +30,7 @@ interface TaskItemProps {
   onStartTimer?: (task: Task) => void;
   onShowAIOptions?: (task: Task) => void;
   onUpdateNote?: (id: string, note: string) => void;
+  onToggleImportant?: (id: string) => void; // Add this new prop
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({ 
@@ -36,7 +39,8 @@ const TaskItem: React.FC<TaskItemProps> = ({
   onDelete, 
   onStartTimer,
   onShowAIOptions,
-  onUpdateNote
+  onUpdateNote,
+  onToggleImportant
 }) => {
   const [note, setNote] = useState(task.note || '');
   
@@ -67,14 +71,24 @@ const TaskItem: React.FC<TaskItemProps> = ({
           )}
         />
         <div className="flex flex-col">
-          <span 
-            className={cn(
-              "text-sm transition-all",
-              task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-200"
+          <div className="flex items-center gap-2">
+            <span 
+              className={cn(
+                "text-sm transition-all",
+                task.completed ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-700 dark:text-gray-200"
+              )}
+            >
+              {task.text}
+            </span>
+            {task.important && (
+              <Badge 
+                variant="destructive" 
+                className="px-1.5 h-5 rounded-md flex items-center justify-center"
+              >
+                !
+              </Badge>
             )}
-          >
-            {task.text}
-          </span>
+          </div>
           {hasNote && (
             <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1">
               <StickyNote className="h-3 w-3 mr-1" /> Has note
@@ -89,6 +103,21 @@ const TaskItem: React.FC<TaskItemProps> = ({
             <Clock className="h-3 w-3 mr-1" />
             {task.timeInMinutes} min
           </div>
+        )}
+        
+        {/* Important Button */}
+        {onToggleImportant && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onToggleImportant(task.id)}
+            className={cn(
+              "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300",
+              task.important && "text-red-500 dark:text-red-400"
+            )}
+          >
+            <AlertCircle className="h-4 w-4" />
+          </Button>
         )}
         
         {/* Note Button */}

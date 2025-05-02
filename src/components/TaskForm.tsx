@@ -2,24 +2,27 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Clock } from 'lucide-react';
+import { Plus, Clock, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TaskFormProps {
-  onAddTask: (task: string, timeInMinutes?: number) => void;
+  onAddTask: (task: string, timeInMinutes?: number, important?: boolean) => void;
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({ onAddTask }) => {
   const [task, setTask] = useState('');
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [timeInMinutes, setTimeInMinutes] = useState<number>(25);
+  const [isImportant, setIsImportant] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (task.trim()) {
-      onAddTask(task, showTimeInput ? timeInMinutes : undefined);
+      onAddTask(task, showTimeInput ? timeInMinutes : undefined, isImportant);
       setTask('');
       setTimeInMinutes(25);
       setShowTimeInput(false);
+      setIsImportant(false);
     }
   };
 
@@ -44,6 +47,19 @@ const TaskForm: React.FC<TaskFormProps> = ({ onAddTask }) => {
           )}
         >
           <Clock className="w-4 h-4" />
+        </Button>
+        
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="icon"
+          onClick={() => setIsImportant(!isImportant)}
+          className={cn(
+            "transition-colors",
+            isImportant ? "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700" : "dark:bg-slate-800 dark:border-slate-700 dark:text-gray-200"
+          )}
+        >
+          <AlertCircle className="w-4 h-4" />
         </Button>
       </div>
 
@@ -71,7 +87,3 @@ const TaskForm: React.FC<TaskFormProps> = ({ onAddTask }) => {
 };
 
 export default TaskForm;
-
-function cn(...classes: string[]): string {
-  return classes.filter(Boolean).join(' ');
-}
