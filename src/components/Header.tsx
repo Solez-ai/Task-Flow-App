@@ -4,6 +4,7 @@ import TaskCalendar from './TaskCalendar';
 import Calculator from './Calculator';
 import HeaderLogo from './HeaderLogo';
 import HeaderActions from './HeaderActions';
+import { useLayout } from '@/contexts/LayoutContext';
 
 interface HeaderProps {
   tasks: Array<any>; // We'll type this properly when we use it
@@ -14,9 +15,10 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const { layoutMode } = useLayout();
 
   return (
-    <header className="py-4 px-4 sm:px-6 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 dark:border-slate-800 sticky top-0 z-10">
+    <header className={`py-2 px-2 sm:py-4 sm:px-4 sm:px-6 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 dark:border-slate-800 sticky top-0 z-10 ${layoutMode === 'phone' ? 'phone-layout' : ''}`}>
       <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between">
           <HeaderLogo 

@@ -13,6 +13,7 @@ import { useSupabaseSync } from '@/hooks/useSupabaseSync';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserTracks } from '@/hooks/useUserTracks';
 import { Navigate } from 'react-router-dom';
+import { useLayout } from '@/contexts/LayoutContext';
 
 const TaskFlowTimer: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>(() => {
@@ -21,6 +22,7 @@ const TaskFlowTimer: React.FC = () => {
   });
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   
+  const { layoutMode } = useLayout();
   const { userTracks } = useUserTracks();
   const { user } = useAuth();
   
@@ -98,29 +100,38 @@ const TaskFlowTimer: React.FC = () => {
     });
   };
 
+  // Determine container classes based on layout mode
+  const containerClasses = layoutMode === 'phone' 
+    ? "p-2 py-4 max-w-full" 
+    : "p-4 py-8 max-w-3xl";
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white dark:from-slate-950 dark:to-slate-900 transition-colors duration-300">
       <Header tasks={tasks} />
-      <div className="container mx-auto max-w-3xl p-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-4 text-task-dark dark:text-task">FocusFlow</h1>
-        <p className="text-center mb-8 text-gray-600 dark:text-gray-300">Manage your time efficiently and complete tasks with structured work sessions.</p>
+      <div className={`container mx-auto ${containerClasses}`}>
+        <h1 className={`${layoutMode === 'phone' ? 'text-xl' : 'text-3xl'} font-bold text-center mb-4 text-task-dark dark:text-task`}>FocusFlow</h1>
+        {layoutMode !== 'phone' && (
+          <p className="text-center mb-8 text-gray-600 dark:text-gray-300">Manage your time efficiently and complete tasks with structured work sessions.</p>
+        )}
         
         <TimerSection 
           activeTask={activeTask} 
           onSessionComplete={handleSessionComplete} 
           onStudyRoundComplete={handleStudyRoundComplete} 
-          onResetActiveTask={() => setActiveTask(null)} 
+          onResetActiveTask={() => setActiveTask(null)}
+          layoutMode={layoutMode}
         />
         
         <TaskManagement 
           tasks={tasks} 
           setTasks={setTasks} 
-          startTaskTimer={startTaskTimer} 
+          startTaskTimer={startTaskTimer}
+          layoutMode={layoutMode}
         />
         
-        <MusicSection />
+        <MusicSection layoutMode={layoutMode} />
         
-        <StatisticsSection />
+        <StatisticsSection layoutMode={layoutMode} />
       </div>
     </div>
   );

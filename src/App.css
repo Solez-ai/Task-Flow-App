@@ -92,3 +92,44 @@
 .dark body::before {
   animation: subtle-wave 20s ease-in-out infinite;
 }
+
+/* Phone layout specific styles */
+.phone-layout {
+  padding: 0.5rem !important;
+}
+
+/* Add improved spacing for phone layout */
+@media (max-width: 640px) {
+  #root {
+    padding: 0.5rem;
+  }
+  
+  .phone-layout .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* Additional phone-friendly styles */
+.phone-layout .card {
+  padding: 1em;
+  margin-bottom: 0.75rem;
+}
+
+.phone-layout button {
+  min-height: 2.5rem;
+}
+
+.phone-layout .section-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.phone-layout .task-item {
+  padding: 0.75rem;
+}
+
+/* Improved touch targets for phone layout */
+.phone-layout .clickable {
+  min-height: 44px; /* Apple's recommended minimum size for touch targets */
+}

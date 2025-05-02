@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, Calculator as CalculatorIcon } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { useLayout } from '@/contexts/LayoutContext';
 
 interface HeaderLogoProps {
   onCalendarOpen: () => void;
@@ -11,7 +12,39 @@ interface HeaderLogoProps {
 
 const HeaderLogo: React.FC<HeaderLogoProps> = ({ onCalendarOpen, onCalculatorOpen }) => {
   const { theme } = useTheme();
+  const { layoutMode } = useLayout();
   
+  // Phone layout
+  if (layoutMode === 'phone') {
+    return (
+      <div className="flex items-center">
+        {/* Compact logo */}
+        {theme === 'light' ? (
+          <div className="h-8">
+            <img 
+              src="/lovable-uploads/6fe1d351-56a8-45e0-b312-d6db23663f33.png" 
+              alt="FocusFlow Logo" 
+              className="h-full object-contain"
+            />
+          </div>
+        ) : (
+          <h1 className="text-task text-lg font-bold">FocusFlow</h1>
+        )}
+        
+        {/* Tool buttons in a more compact layout */}
+        <div className="flex ml-2">
+          <Button variant="ghost" size="sm" onClick={onCalendarOpen} className="h-6 w-6 rounded-full p-0" title="Task Calendar">
+            <Calendar className="h-3 w-3 text-task-dark dark:text-task" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onCalculatorOpen} className="h-6 w-6 rounded-full p-0 ml-1" title="Quick Calculator">
+            <CalculatorIcon className="h-3 w-3 text-task-dark dark:text-task" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  // PC layout (original)
   return (
     <div className="flex items-center gap-3">
       {/* Logo image in light mode, text in dark mode */}

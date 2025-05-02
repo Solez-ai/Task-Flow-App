@@ -7,19 +7,22 @@ import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
+import { LayoutProvider } from './contexts/LayoutContext';
 import './App.css';
 
 const App = () => {
   return (
     <main>
       <AuthProvider>
-        <Toaster position="bottom-right" richColors closeButton />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <LayoutProvider>
+          <Toaster position="bottom-right" richColors closeButton />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </LayoutProvider>
       </AuthProvider>
     </main>
   );

@@ -1,25 +1,52 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import MusicPlayer from '../MusicPlayer';
+import MusicLibrary from '../MusicLibrary';
+import AudioFileUploader from '../AudioFileUploader';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { useLayout } from '@/contexts/LayoutContext'; 
 
-const MusicSection: React.FC = () => {
+interface MusicSectionProps {
+  layoutMode?: 'pc' | 'phone';
+}
+
+const MusicSection: React.FC<MusicSectionProps> = ({ 
+  layoutMode = 'pc' 
+}) => {
+  const [activeTab, setActiveTab] = useState('player');
+  
   return (
-    <div className="mt-10 mb-8">
-      <h2 className="text-xl font-semibold mb-4 text-task-dark dark:text-task">Music Player</h2>
-      <div className="text-sm text-muted-foreground mb-3 p-3 border border-dashed rounded-md bg-slate-50 dark:bg-slate-800">
-        <p>
-          Got no idea which music to use or too lazy to download? Check what the Developer recommends - <a 
-            href="https://drive.google.com/drive/folders/1FhBNFcsXJ26pMDCBoWnwr-b6Y2ZBMplg?usp=sharing"
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            Music Collection
-          </a>
-        </p>
-      </div>
-      <MusicPlayer />
-    </div>
+    <Card className={`${layoutMode === 'phone' ? 'mb-4' : 'mb-8'} shadow-md`}>
+      <CardHeader className={layoutMode === 'phone' ? 'pb-2' : ''}>
+        <CardTitle className={layoutMode === 'phone' ? 'text-lg' : ''}>Focus Music</CardTitle>
+      </CardHeader>
+      <CardContent className={layoutMode === 'phone' ? 'pt-0' : ''}>
+        <Tabs 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className={layoutMode === 'phone' ? 'space-y-2' : 'space-y-4'}
+        >
+          <TabsList className={`grid w-full grid-cols-3 ${layoutMode === 'phone' ? 'h-9' : ''}`}>
+            <TabsTrigger value="player" className={layoutMode === 'phone' ? 'text-xs py-1' : ''}>Player</TabsTrigger>
+            <TabsTrigger value="library" className={layoutMode === 'phone' ? 'text-xs py-1' : ''}>Library</TabsTrigger>
+            <TabsTrigger value="upload" className={layoutMode === 'phone' ? 'text-xs py-1' : ''}>Upload</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="player" className="m-0">
+            <MusicPlayer compact={layoutMode === 'phone'} />
+          </TabsContent>
+          
+          <TabsContent value="library" className="m-0">
+            <MusicLibrary compact={layoutMode === 'phone'} />
+          </TabsContent>
+          
+          <TabsContent value="upload" className="m-0">
+            <AudioFileUploader compact={layoutMode === 'phone'} />
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };
 
