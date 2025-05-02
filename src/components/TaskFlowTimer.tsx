@@ -6,6 +6,7 @@ import TaskList from './TaskList';
 import Timer from './Timer';
 import DailyStatsPanel from './DailyStatsPanel';
 import StreakPanel from './StreakPanel';
+import MusicPlayer from './MusicPlayer';
 import { Task } from './TaskItem';
 import { useDailyStats } from '@/hooks/useDailyStats';
 import { toast } from 'sonner';
@@ -152,9 +153,11 @@ const TaskFlowTimer: React.FC = () => {
           onResetActiveTask={() => setActiveTask(null)}
         />
         
+        {/* Add Music Player below the Timer */}
+        <MusicPlayer />
+        
         <DailyStatsPanel stats={stats} onResetStats={resetStats} />
         
-        {/* Add the Streak Panel below DailyStatsPanel */}
         <StreakPanel 
           streak={stats.streak} 
           completedToday={stats.completedTasks} 
