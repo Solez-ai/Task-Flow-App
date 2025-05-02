@@ -16,7 +16,7 @@ const HeaderLogo: React.FC<HeaderLogoProps> = ({ onCalendarOpen, onCalculatorOpe
     <div className="flex items-center gap-3">
       {/* Logo image in light mode, text in dark mode */}
       {theme === 'light' ? (
-        <div className="h-10">
+        <div className="h-14">
           <img 
             src="/lovable-uploads/6fe1d351-56a8-45e0-b312-d6db23663f33.png" 
             alt="FocusFlow Logo" 
@@ -24,7 +24,7 @@ const HeaderLogo: React.FC<HeaderLogoProps> = ({ onCalendarOpen, onCalculatorOpe
           />
         </div>
       ) : (
-        <h1 className="text-task text-xl font-bold">FocusFlow</h1>
+        <h1 className="text-task text-2xl font-bold">FocusFlow</h1>
       )}
       
       {/* Mini Calendar Button */}
