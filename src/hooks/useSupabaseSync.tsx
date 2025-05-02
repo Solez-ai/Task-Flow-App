@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useStats } from '@/contexts/StatsContext';
-import { useBadges } from '@/hooks/useBadges';
 import { Task } from '@/components/TaskItem';
 import { Track } from '@/components/MusicLibrary';
 import { toast } from 'sonner';
@@ -15,7 +14,6 @@ export function useSupabaseSync(
 ) {
   const { user } = useAuth();
   const { stats } = useStats();
-  const { earnedBadges } = useBadges();
 
   // Sync tasks with Supabase
   const syncTasks = async () => {
@@ -72,94 +70,6 @@ export function useSupabaseSync(
     }
   };
 
-  // Sync daily stats with Supabase
-  const syncDailyStats = async () => {
-    if (!user) return;
-    
-    try {
-      const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-      
-      // Check if we have stats for today
-      const { data: existingStat, error: fetchError } = await supabase
-        .from('user_stats')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('date', today)
-        .maybeSingle();
-        
-      if (fetchError) throw fetchError;
-      
-      if (existingStat) {
-        // Update existing stats
-        const { error: updateError } = await supabase
-          .from('user_stats')
-          .update({
-            pomodoro_sessions: stats.pomodoroSessions,
-            completed_tasks: stats.completedTasks,
-            focused_time_minutes: stats.focusedTimeMinutes,
-            study_mode_rounds: stats.studyModeRounds
-          })
-          .eq('id', existingStat.id);
-          
-        if (updateError) throw updateError;
-      } else {
-        // Insert new stats for today
-        const { error: insertError } = await supabase
-          .from('user_stats')
-          .insert({
-            user_id: user.id,
-            date: today,
-            pomodoro_sessions: stats.pomodoroSessions,
-            completed_tasks: stats.completedTasks,
-            focused_time_minutes: stats.focusedTimeMinutes,
-            study_mode_rounds: stats.studyModeRounds
-          });
-          
-        if (insertError) throw insertError;
-      }
-    } catch (error) {
-      console.error('Error syncing stats:', error);
-    }
-  };
-
-  // Sync earned badges with Supabase
-  const syncBadges = async () => {
-    if (!user || earnedBadges.length === 0) return;
-    
-    try {
-      // Get existing badges for user
-      const { data: existingBadges, error: fetchError } = await supabase
-        .from('user_badges')
-        .select('badge_id')
-        .eq('user_id', user.id);
-        
-      if (fetchError) throw fetchError;
-      
-      const existingBadgeIds = new Set((existingBadges || []).map(b => b.badge_id));
-      const newBadges = earnedBadges.filter(badge => !existingBadgeIds.has(badge.id));
-      
-      // Insert only new badges
-      if (newBadges.length > 0) {
-        const { error: insertError } = await supabase
-          .from('user_badges')
-          .insert(
-            newBadges.map(badge => ({
-              user_id: user.id,
-              badge_id: badge.id,
-              name: badge.name,
-              description: badge.description,
-              category: badge.category,
-              icon: badge.icon
-            }))
-          );
-          
-        if (insertError) throw insertError;
-      }
-    } catch (error) {
-      console.error('Error syncing badges:', error);
-    }
-  };
-
   // Sync user music tracks
   const syncMusicTracks = async () => {
     if (!user || userTracks.length === 0) return;
@@ -212,26 +122,23 @@ export function useSupabaseSync(
     const syncAllData = async () => {
       await Promise.all([
         syncTasks(),
-        syncDailyStats(),
-        syncBadges(),
         syncMusicTracks()
       ]);
     };
 
-    const syncTimer = setInterval(syncAllData, 60000); // Sync every minute
-    
-    // Initial sync
+    // Sync immediately when tasks or tracks change
     syncAllData();
+    
+    // Also set up a periodic sync
+    const syncTimer = setInterval(syncAllData, 60000); // Sync every minute
     
     return () => {
       clearInterval(syncTimer);
     };
-  }, [user, tasks, stats, earnedBadges, userTracks]);
+  }, [user, tasks, userTracks]);
   
   return {
     syncTasks,
-    syncDailyStats,
-    syncBadges,
     syncMusicTracks
   };
 }

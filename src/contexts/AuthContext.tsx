@@ -33,9 +33,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      
+      // Store profile data in localStorage for persistence
+      if (data) {
+        localStorage.setItem('userProfile', JSON.stringify(data));
+        setProfile(data);
+      }
     } catch (error: any) {
       console.error('Error fetching profile:', error);
+      // Try to get profile from localStorage if fetch fails
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile));
+      }
     }
   };
 
@@ -64,12 +74,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }, 0);
         } else {
           setProfile(null);
+          localStorage.removeItem('userProfile');
         }
 
         if (event === 'SIGNED_IN') {
           toast.success('Signed in successfully');
         } else if (event === 'SIGNED_OUT') {
           toast.info('Signed out successfully');
+          localStorage.removeItem('userProfile');
         }
       }
     );
@@ -80,6 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(initialSession?.user ?? null);
       
       if (initialSession?.user) {
+        // Use existing profile data from localStorage if available
+        const savedProfile = localStorage.getItem('userProfile');
+        if (savedProfile) {
+          setProfile(JSON.parse(savedProfile));
+        }
+        
         fetchProfile(initialSession.user.id);
       }
       
@@ -120,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign out
   const signOut = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('userProfile');
   };
 
   return (

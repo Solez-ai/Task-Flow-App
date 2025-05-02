@@ -9,9 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { Loader2, Upload, User, History, Music, Award } from 'lucide-react';
+import { Loader2, Upload, User, History, Music } from 'lucide-react';
 import { format } from 'date-fns';
-import BadgeDisplay from '@/components/BadgeDisplay';
 
 const Profile: React.FC = () => {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -21,9 +20,7 @@ const Profile: React.FC = () => {
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [taskHistory, setTaskHistory] = useState<any[]>([]);
-  const [userStats, setUserStats] = useState<any[]>([]);
   const [userMusic, setUserMusic] = useState<any[]>([]);
-  const [userBadges, setUserBadges] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
@@ -58,16 +55,6 @@ const Profile: React.FC = () => {
       if (tasksError) throw tasksError;
       setTaskHistory(tasksData || []);
 
-      // Fetch stats
-      const { data: statsData, error: statsError } = await supabase
-        .from('user_stats')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
-
-      if (statsError) throw statsError;
-      setUserStats(statsData || []);
-
       // Fetch music
       const { data: musicData, error: musicError } = await supabase
         .from('user_music')
@@ -77,16 +64,6 @@ const Profile: React.FC = () => {
 
       if (musicError) throw musicError;
       setUserMusic(musicData || []);
-
-      // Fetch badges
-      const { data: badgesData, error: badgesError } = await supabase
-        .from('user_badges')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('earned_at', { ascending: false });
-
-      if (badgesError) throw badgesError;
-      setUserBadges(badgesData || []);
       
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -182,13 +159,6 @@ const Profile: React.FC = () => {
     formattedCompletedAt: task.completed_at ? format(new Date(task.completed_at), 'MMM dd, yyyy') : '-'
   }));
 
-  // Format stats for display
-  const formattedStats = userStats.map(stat => ({
-    ...stat,
-    formattedDate: format(new Date(stat.date), 'MMM dd, yyyy'),
-    totalTimeFormatted: `${Math.floor(stat.focused_time_minutes / 60)}h ${stat.focused_time_minutes % 60}m`
-  }));
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white dark:from-slate-950 dark:to-slate-900">
       <div className="container mx-auto max-w-5xl px-4 py-8">
@@ -268,7 +238,7 @@ const Profile: React.FC = () => {
           <Card className="md:col-span-2 dark:bg-slate-900 dark:border-slate-800">
             <CardHeader className="pb-2">
               <CardTitle className="dark:text-gray-200">Your Activity Data</CardTitle>
-              <CardDescription className="dark:text-gray-400">View your tasks, stats, and achievements</CardDescription>
+              <CardDescription className="dark:text-gray-400">View your tasks and music</CardDescription>
             </CardHeader>
             <CardContent className="pt-2">
               {loadingData ? (
@@ -277,14 +247,10 @@ const Profile: React.FC = () => {
                 </div>
               ) : (
                 <Tabs defaultValue="history">
-                  <TabsList className="grid grid-cols-3 mb-4">
+                  <TabsList className="grid grid-cols-2 mb-4">
                     <TabsTrigger value="history" className="flex items-center gap-1">
                       <History className="h-4 w-4" />
                       <span className="hidden sm:inline">Task History</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="stats" className="flex items-center gap-1">
-                      <Award className="h-4 w-4" />
-                      <span className="hidden sm:inline">Stats & Badges</span>
                     </TabsTrigger>
                     <TabsTrigger value="music" className="flex items-center gap-1">
                       <Music className="h-4 w-4" />
@@ -331,59 +297,6 @@ const Profile: React.FC = () => {
                             <p className="text-sm text-gray-500 dark:text-gray-400">Showing 10 of {formattedTasks.length} tasks</p>
                           </div>
                         )}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* Stats & Badges Tab */}
-                  <TabsContent value="stats" className="space-y-6">
-                    {/* Stats Section */}
-                    <div>
-                      <h3 className="text-lg font-medium mb-3 dark:text-gray-200">Daily Stats History</h3>
-                      {formattedStats.length === 0 ? (
-                        <div className="text-center py-8 border rounded-md dark:border-gray-700">
-                          <Award className="h-10 w-10 mx-auto text-gray-400 mb-2" />
-                          <p className="text-gray-500 dark:text-gray-400">No statistics recorded yet</p>
-                        </div>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full border-collapse">
-                            <thead>
-                              <tr className="border-b dark:border-gray-700">
-                                <th className="py-2 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Date</th>
-                                <th className="py-2 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Focus Sessions</th>
-                                <th className="py-2 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Tasks Done</th>
-                                <th className="py-2 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Focus Time</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {formattedStats.slice(0, 5).map((stat) => (
-                                <tr key={stat.id} className="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-slate-800/50">
-                                  <td className="py-2 text-sm dark:text-gray-300">{stat.formattedDate}</td>
-                                  <td className="py-2 text-sm dark:text-gray-300">{stat.pomodoro_sessions}</td>
-                                  <td className="py-2 text-sm dark:text-gray-300">{stat.completed_tasks}</td>
-                                  <td className="py-2 text-sm dark:text-gray-300">{stat.totalTimeFormatted}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Badges Section */}
-                    {userBadges.length > 0 && (
-                      <div className="mt-6">
-                        <h3 className="text-lg font-medium mb-3 dark:text-gray-200">Your Badges</h3>
-                        <BadgeDisplay 
-                          earnedBadges={userBadges.map(badge => ({
-                            id: badge.badge_id,
-                            name: badge.name,
-                            description: badge.description,
-                            category: badge.category,
-                            icon: badge.icon
-                          }))} 
-                        />
                       </div>
                     )}
                   </TabsContent>

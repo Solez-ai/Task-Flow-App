@@ -7,6 +7,8 @@ import { Task } from '../TaskItem';
 import { useStats } from '@/contexts/StatsContext';
 import { useBadges } from '@/hooks/useBadges';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TaskManagementProps {
   tasks: Task[];
@@ -19,6 +21,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   setTasks,
   startTaskTimer 
 }) => {
+  const { user } = useAuth();
   const {
     addCompletedTask,
     stats
@@ -33,6 +36,57 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     localStorage.setItem('tasks', JSON.stringify(tasks));
   }, [tasks]);
 
+  // Function to sync a single task to Supabase
+  const syncTaskToSupabase = async (task: Task) => {
+    if (!user) return;
+    
+    try {
+      // Check if task exists
+      const { data: existingTask, error: fetchError } = await supabase
+        .from('tasks')
+        .select('id')
+        .eq('id', task.id)
+        .maybeSingle();
+        
+      if (fetchError) throw fetchError;
+      
+      if (existingTask) {
+        // Update existing task
+        const { error: updateError } = await supabase
+          .from('tasks')
+          .update({
+            text: task.text,
+            completed: task.completed,
+            time_in_minutes: task.timeInMinutes,
+            note: task.note || null,
+            important: task.important || false,
+            completed_at: task.completedAt || null
+          })
+          .eq('id', task.id);
+          
+        if (updateError) throw updateError;
+      } else {
+        // Insert new task
+        const { error: insertError } = await supabase
+          .from('tasks')
+          .insert({
+            id: task.id,
+            user_id: user.id,
+            text: task.text,
+            completed: task.completed,
+            time_in_minutes: task.timeInMinutes,
+            note: task.note || null,
+            important: task.important || false,
+            completed_at: task.completedAt || null
+          });
+          
+        if (insertError) throw insertError;
+      }
+    } catch (error) {
+      console.error('Error syncing task to Supabase:', error);
+    }
+  };
+
   const addTask = (text: string, timeInMinutes?: number, important?: boolean) => {
     // Ensure timeInMinutes is a valid number between 1-120, or default to 25
     const validTime = timeInMinutes ? Math.max(1, Math.min(timeInMinutes, 120)) : undefined;
@@ -45,7 +99,14 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       note: '',
       important
     };
+    
     setTasks([...tasks, newTask]);
+    
+    // Immediately sync new task to Supabase
+    if (user) {
+      syncTaskToSupabase(newTask);
+    }
+    
     toast.success("Task added successfully!");
   };
 
@@ -71,6 +132,11 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           });
         }
         
+        // Immediately sync updated task to Supabase
+        if (user) {
+          syncTaskToSupabase(updatedTask);
+        }
+        
         return updatedTask;
       }
       return task;
@@ -78,6 +144,19 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   };
 
   const deleteTask = (id: string) => {
+    // If user is logged in, delete from Supabase
+    if (user) {
+      supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error deleting task from Supabase:', error);
+          }
+        });
+    }
+    
     setTasks(tasks.filter(task => task.id !== id));
     toast.success("Task deleted successfully!");
   };
@@ -85,10 +164,17 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   const updateTaskNote = (id: string, note: string) => {
     setTasks(tasks.map(task => {
       if (task.id === id) {
-        return {
+        const updatedTask = {
           ...task,
           note
         };
+        
+        // Immediately sync updated task to Supabase
+        if (user) {
+          syncTaskToSupabase(updatedTask);
+        }
+        
+        return updatedTask;
       }
       return task;
     }));
@@ -97,10 +183,17 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   const toggleImportant = (id: string) => {
     setTasks(tasks.map(task => {
       if (task.id === id) {
-        return {
+        const updatedTask = {
           ...task,
           important: !task.important
         };
+        
+        // Immediately sync updated task to Supabase
+        if (user) {
+          syncTaskToSupabase(updatedTask);
+        }
+        
+        return updatedTask;
       }
       return task;
     }));
