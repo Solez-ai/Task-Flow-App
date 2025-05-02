@@ -42,7 +42,7 @@ const StreakPanel: React.FC<StreakPanelProps> = ({
               </h4>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 text-sm px-3 py-1">
-                  {streak} {streak === 1 ? 'day' : 'days'}
+                  {streak}
                 </Badge>
                 {streak >= 3 && (
                   <span className="text-amber-600 dark:text-amber-400 text-sm font-medium">
