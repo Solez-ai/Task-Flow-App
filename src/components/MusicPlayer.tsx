@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,13 +11,17 @@ import {
   Repeat, 
   Volume2, 
   VolumeX,
-  Clock
+  Clock,
+  Music
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
+import { toast } from 'sonner';
+import AudioFileUploader from './AudioFileUploader';
+import MusicLibrary, { Track } from './MusicLibrary';
 
 // Define music tracks with the user's provided links
-const musicTracks = [
+const presetMusicTracks = [
   {
     id: 1,
     title: "Quiet Night",
@@ -66,8 +71,20 @@ const MusicPlayer: React.FC = () => {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [audioObjectURLs, setAudioObjectURLs] = useState<string[]>([]);
+  const [userTracks, setUserTracks] = useState<Track[]>(() => {
+    const savedTracks = localStorage.getItem('userMusicTracks');
+    return savedTracks ? JSON.parse(savedTracks) : [];
+  });
   
-  const currentTrack = musicTracks[currentTrackIndex];
+  // Combine preset tracks with user tracks
+  const allTracks = [...presetMusicTracks, ...userTracks];
+  const currentTrack = allTracks[currentTrackIndex];
+
+  // Save user tracks to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('userMusicTracks', JSON.stringify(userTracks));
+  }, [userTracks]);
 
   // Fix for the Pixabay links to get the actual audio file
   const getAudioUrl = (pixabayUrl: string) => {
@@ -76,7 +93,7 @@ const MusicPlayer: React.FC = () => {
     // For example: transforms the webpage URL to actual audio file URL
     
     // Check if it's already a usable audio URL
-    if (pixabayUrl.endsWith('.mp3')) return pixabayUrl;
+    if (pixabayUrl.endsWith('.mp3') || pixabayUrl.startsWith('blob:')) return pixabayUrl;
     
     // For actual implementation, you would need to handle proper audio file URLs
     // For now, we'll use the demo audio files as fallbacks
@@ -100,7 +117,7 @@ const MusicPlayer: React.FC = () => {
       audioRef.current.addEventListener('ended', handleTrackEnd);
     }
     
-    // Update audio properties when track changes
+    // Cleanup function
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -108,6 +125,13 @@ const MusicPlayer: React.FC = () => {
       }
     };
   }, []);
+
+  // Clean up object URLs to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      audioObjectURLs.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [audioObjectURLs]);
 
   // Handle track changes
   useEffect(() => {
@@ -160,12 +184,12 @@ const MusicPlayer: React.FC = () => {
   };
 
   const nextTrack = () => {
-    const newIndex = (currentTrackIndex + 1) % musicTracks.length;
+    const newIndex = (currentTrackIndex + 1) % allTracks.length;
     setCurrentTrackIndex(newIndex);
   };
 
   const prevTrack = () => {
-    const newIndex = (currentTrackIndex - 1 + musicTracks.length) % musicTracks.length;
+    const newIndex = (currentTrackIndex - 1 + allTracks.length) % allTracks.length;
     setCurrentTrackIndex(newIndex);
   };
 
@@ -191,6 +215,62 @@ const MusicPlayer: React.FC = () => {
     setPlaybackRate(newValue[0] / 100);
   };
 
+  const handleFileUpload = (file: File) => {
+    // Create an object URL for the file
+    const objectURL = URL.createObjectURL(file);
+    setAudioObjectURLs(prev => [...prev, objectURL]);
+    
+    // Generate a unique ID
+    const id = `user-${Date.now()}`;
+    
+    // Extract title from filename (remove extension)
+    const title = file.name.replace(/\.[^/.]+$/, "");
+    
+    // Add to user tracks
+    const newTrack: Track = {
+      id,
+      title,
+      artist: 'My Music',
+      src: objectURL,
+      isUserUploaded: true
+    };
+    
+    setUserTracks(prev => [...prev, newTrack]);
+  };
+
+  const handleDeleteTrack = (id: string | number) => {
+    // Find the track to get its URL
+    const trackToDelete = userTracks.find(track => track.id === id);
+    
+    // If the current track is being deleted, switch to the first track
+    if (currentTrack && currentTrack.id === id) {
+      setCurrentTrackIndex(0);
+    } else if (currentTrackIndex >= presetMusicTracks.length) {
+      // Adjust currentTrackIndex if needed
+      const deletedIndex = allTracks.findIndex(track => track.id === id);
+      if (deletedIndex !== -1 && deletedIndex < currentTrackIndex) {
+        setCurrentTrackIndex(currentTrackIndex - 1);
+      }
+    }
+    
+    // Remove the object URL if it exists
+    if (trackToDelete && trackToDelete.src.startsWith('blob:')) {
+      URL.revokeObjectURL(trackToDelete.src);
+      setAudioObjectURLs(prev => prev.filter(url => url !== trackToDelete.src));
+    }
+    
+    // Update user tracks
+    setUserTracks(prev => prev.filter(track => track.id !== id));
+    toast.success("Track removed from library");
+  };
+
+  const handleTrackSelect = (index: number) => {
+    setCurrentTrackIndex(index);
+    if (audioRef.current && !isPlaying) {
+      togglePlay();
+    }
+  };
+
   // Format time for display (mm:ss)
   const formatTime = (timeInSeconds: number) => {
     const minutes = Math.floor(timeInSeconds / 60);
@@ -202,6 +282,8 @@ const MusicPlayer: React.FC = () => {
   const bgGradient = theme === 'dark' 
     ? 'bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 border-slate-700'
     : 'bg-gradient-to-r from-purple-50 via-purple-100 to-purple-50 border-purple-200';
+
+  const [showUploader, setShowUploader] = useState(false);
 
   return (
     <Card className={cn(
@@ -225,6 +307,19 @@ const MusicPlayer: React.FC = () => {
               "Music is one of the keys to focus"
             </p>
           </div>
+          
+          <Button 
+            size="sm" 
+            variant={showUploader ? "secondary" : "outline"} 
+            onClick={() => setShowUploader(!showUploader)}
+            className={cn(
+              "text-xs",
+              theme === 'dark' ? 'border-purple-700' : 'border-purple-300'
+            )}
+          >
+            <Music className="h-3 w-3 mr-1" />
+            {showUploader ? "Hide Uploader" : "Upload Music"}
+          </Button>
         </div>
 
         {/* Track Info */}
@@ -239,9 +334,14 @@ const MusicPlayer: React.FC = () => {
             "text-sm",
             theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
           )}>
-            {currentTrack.artist}
+            {currentTrack.artist} {currentTrack.isUserUploaded && '(Uploaded)'}
           </p>
         </div>
+
+        {/* Audio File Uploader (Togglable) */}
+        {showUploader && (
+          <AudioFileUploader onFileUpload={handleFileUpload} />
+        )}
 
         {/* Player Controls */}
         <div className="flex items-center justify-between mb-4">
@@ -336,11 +436,20 @@ const MusicPlayer: React.FC = () => {
         </div>
 
         {/* Current Speed Display */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-4">
           <span className="text-xs text-center">
             {playbackRate.toFixed(1)}x speed
           </span>
         </div>
+        
+        {/* Music Library */}
+        <MusicLibrary 
+          tracks={allTracks}
+          currentTrackIndex={currentTrackIndex}
+          isPlaying={isPlaying}
+          onTrackSelect={handleTrackSelect}
+          onDeleteTrack={(id) => handleDeleteTrack(id)}
+        />
       </CardContent>
     </Card>
   );
