@@ -8,18 +8,27 @@ import TimerDisplay from './timer/TimerDisplay';
 import TimerControls from './timer/TimerControls';
 import TimerModeSelector from './timer/TimerModeSelector';
 import ActiveTaskDisplay from './timer/ActiveTaskDisplay';
-import { TimerProvider } from '@/contexts/TimerContext';
+import { TimerProvider, useTimerContext } from '@/contexts/TimerContext';
 import { Task } from './TaskItem';
 
-interface TimerProps {
-  onSessionComplete?: () => void;
-  onStudyRoundComplete?: () => void;
-  activeTask?: Task | null;
-  onResetActiveTask?: () => void;
-}
-
+// Extract TimerContent as a separate component
 const TimerContent: React.FC = () => {
-  const { timerMode, studyState, activeTask, isStudyActive, pomodoroCount, timeLeft, totalTime, isRunning, start, pause, reset, skipCurrentSession, changeTimerMode, toggleStudyMode } = useTimerContext();
+  const { 
+    timerMode, 
+    studyState, 
+    activeTask, 
+    isStudyActive, 
+    pomodoroCount, 
+    timeLeft, 
+    totalTime, 
+    isRunning, 
+    start, 
+    pause, 
+    reset, 
+    skipCurrentSession, 
+    changeTimerMode, 
+    toggleStudyMode 
+  } = useTimerContext();
 
   return (
     <>
@@ -72,9 +81,13 @@ const TimerContent: React.FC = () => {
   );
 };
 
-import { useTimerContext } from '@/contexts/TimerContext';
-
-const Timer: React.FC<TimerProps> = ({
+// Main Timer component
+const Timer: React.FC<{
+  onSessionComplete?: () => void;
+  onStudyRoundComplete?: () => void;
+  activeTask?: Task | null;
+  onResetActiveTask?: () => void;
+}> = ({
   onSessionComplete,
   onStudyRoundComplete,
   activeTask,
