@@ -43,19 +43,21 @@ interface TimerProviderProps {
   onSessionComplete?: () => void;
   onStudyRoundComplete?: () => void;
   onResetActiveTask?: () => void;
+  activeTask?: Task | null;
 }
 
 export const TimerProvider: React.FC<TimerProviderProps> = ({ 
   children, 
   onSessionComplete,
   onStudyRoundComplete,
-  onResetActiveTask 
+  onResetActiveTask,
+  activeTask: initialActiveTask
 }) => {
   const [timerMode, setTimerMode] = useState<TimerMode>('focus');
   const [studyState, setStudyState] = useState<StudyState>('focus');
   const [isStudyActive, setIsStudyActive] = useState(false);
   const [pomodoroCount, setPomodoroCount] = useState(1);
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeTask, setActiveTask] = useState<Task | null>(initialActiveTask || null);
 
   // Set initial time based on active task, study mode or timer mode
   const getInitialTime = () => {
@@ -93,6 +95,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
         if (onResetActiveTask) {
           onResetActiveTask();
         }
+        setActiveTask(null);
       }
     }
     // Handle study mode completion - automatic transitions between focus and break
@@ -135,6 +138,13 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
     onComplete: handleComplete
   });
 
+  // Set initial active task from props when provided
+  useEffect(() => {
+    if (initialActiveTask && initialActiveTask !== activeTask) {
+      setActiveTask(initialActiveTask);
+    }
+  }, [initialActiveTask]);
+
   // Reset timer when active task changes
   useEffect(() => {
     if (activeTask) {
@@ -143,6 +153,8 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
       timer.setTimerDuration(taskTime);
       setTimerMode('focus');
       setIsStudyActive(false);
+      // Auto-start timer for task
+      timer.start();
       // Notify the user that we're using the task's specific time
       if (activeTask.timeInMinutes) {
         toast.info(`Starting timer for: ${activeTask.text}`, {

@@ -96,8 +96,9 @@ const Timer: React.FC<{
   return (
     <TimerProvider 
       onSessionComplete={onSessionComplete}
-      onResetActiveTask={onResetActiveTask}
       onStudyRoundComplete={onStudyRoundComplete}
+      onResetActiveTask={onResetActiveTask}
+      activeTask={activeTask}
     >
       <Card className="overflow-hidden">
         <TimerContent />
