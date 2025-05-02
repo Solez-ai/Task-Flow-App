@@ -15,7 +15,8 @@ const HeaderActions: React.FC = () => {
 
   const handleAIAssistantClick = () => {
     toast.info("AI Features Coming Soon", {
-      description: "We're working on intelligent features to help you be more productive!"
+      description: "We're working on intelligent features to help you be more productive!",
+      duration: 3000,
     });
   };
 

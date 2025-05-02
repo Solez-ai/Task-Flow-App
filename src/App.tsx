@@ -9,7 +9,7 @@ import './App.css';
 const App = () => {
   return (
     <main>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors closeButton />
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="*" element={<NotFound />} />
