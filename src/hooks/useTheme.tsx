@@ -12,7 +12,17 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
+    // Check if the user has visited the site before
+    const hasVisitedBefore = localStorage.getItem('hasVisitedBefore');
     const savedTheme = localStorage.getItem('theme');
+    
+    // If it's the first visit, set light mode as default
+    if (!hasVisitedBefore) {
+      localStorage.setItem('hasVisitedBefore', 'true');
+      return 'light';
+    }
+    
+    // If user has visited before, use their saved preference or system preference
     return (savedTheme as Theme) || 
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   });
