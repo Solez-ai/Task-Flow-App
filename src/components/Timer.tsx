@@ -20,7 +20,7 @@ const Timer: React.FC<TimerProps> = ({
   activeTask,
   onResetActiveTask
 }) => {
-  const [timerMode, setTimerMode] = React.useState<'focus' | 'break' | 'study'>('focus');
+  const [timerMode, setTimerMode] = React.useState<'focus' | 'break' | 'study' | 'mini-focus' | 'long-break'>('focus');
   const [studyState, setStudyState] = React.useState<'focus' | 'break'>('focus');
   const [isStudyActive, setIsStudyActive] = React.useState(false);
   const [pomodoroCount, setPomodoroCount] = React.useState(1);
@@ -29,13 +29,20 @@ const Timer: React.FC<TimerProps> = ({
   const getInitialTime = () => {
     if (activeTask) return activeTask.timeInMinutes! * 60;
     if (timerMode === 'study') return studyState === 'focus' ? 25 * 60 : 5 * 60;
-    return timerMode === 'focus' ? 25 * 60 : 5 * 60;
+    
+    // Add time for different modes
+    if (timerMode === 'focus') return 25 * 60;
+    if (timerMode === 'mini-focus') return 10 * 60;
+    if (timerMode === 'break') return 5 * 60;
+    if (timerMode === 'long-break') return 15 * 60;
+    
+    return 25 * 60; // Default
   };
   
   const handleComplete = () => {
     // Handle normal timer completion
     if (!isStudyActive) {
-      const isWorkSession = timerMode === 'focus';
+      const isWorkSession = timerMode === 'focus' || timerMode === 'mini-focus';
       toast(isWorkSession ? 'Focus session completed!' : 'Break completed!', {
         description: isWorkSession ? 'Time for a break!' : 'Ready to focus again?'
       });
@@ -119,6 +126,8 @@ const Timer: React.FC<TimerProps> = ({
   const getTimerModeName = () => {
     if (activeTask) return 'Task Timer';
     if (timerMode === 'study') return studyState === 'focus' ? 'Study Focus' : 'Study Break';
+    if (timerMode === 'mini-focus') return 'Mini Focus';
+    if (timerMode === 'long-break') return 'Long Break';
     return timerMode === 'focus' ? 'Focus Time' : 'Break Time';
   };
 
@@ -130,6 +139,8 @@ const Timer: React.FC<TimerProps> = ({
         ? 'bg-blue-500 text-white' 
         : 'bg-emerald-500 text-white';
     }
+    if (timerMode === 'mini-focus') return 'bg-indigo-500 text-white';
+    if (timerMode === 'long-break') return 'bg-teal-600 text-white';
     return timerMode === 'focus' 
       ? 'bg-task text-white' 
       : 'bg-green-500 text-white';
@@ -188,13 +199,35 @@ const Timer: React.FC<TimerProps> = ({
       }
     } else {
       // For normal timer, just toggle between focus/break
-      const isWorkSession = timerMode === 'focus';
+      const isWorkSession = timerMode === 'focus' || timerMode === 'mini-focus';
       setTimerMode(isWorkSession ? 'break' : 'focus');
       const newTime = isWorkSession ? 5 : 25;
       timer.reset();
       timer.setTimerDuration(newTime);
       toast.info(isWorkSession ? 'Skipped to break' : 'Skipped to focus time');
     }
+  };
+
+  // Handle timer mode change 
+  const changeTimerMode = (mode: 'focus' | 'mini-focus' | 'break' | 'long-break') => {
+    if (isStudyActive) {
+      stopStudyMode();
+    }
+    
+    setTimerMode(mode);
+    
+    // Set appropriate duration based on mode
+    let duration = 25;
+    if (mode === 'mini-focus') duration = 10;
+    else if (mode === 'break') duration = 5;
+    else if (mode === 'long-break') duration = 15;
+    
+    timer.reset();
+    timer.setTimerDuration(duration);
+    
+    toast.info(`Timer set to ${mode.replace('-', ' ')} mode`, {
+      description: `${duration} minutes timer set`
+    });
   };
 
   return (
@@ -239,9 +272,11 @@ const Timer: React.FC<TimerProps> = ({
             <div 
               className={cn(
                 "h-1 rounded-full transition-all duration-300",
-                timerMode === 'break' || (timerMode === 'study' && studyState === 'break') 
+                timerMode === 'break' || timerMode === 'long-break' || (timerMode === 'study' && studyState === 'break') 
                   ? "bg-green-500" 
-                  : "bg-task"
+                  : timerMode === 'mini-focus' 
+                    ? "bg-indigo-500" 
+                    : "bg-task"
               )}
               style={{ 
                 width: `${(timer.timeLeft / timer.totalTime) * 100}%` 
@@ -266,9 +301,11 @@ const Timer: React.FC<TimerProps> = ({
             onClick={timer.isRunning ? timer.pause : timer.start} 
             className={cn(
               "min-w-[120px]",
-              timerMode === 'break' || (timerMode === 'study' && studyState === 'break')
+              timerMode === 'break' || timerMode === 'long-break' || (timerMode === 'study' && studyState === 'break')
                 ? "bg-green-500 hover:bg-green-600" 
-                : "bg-task hover:bg-task-dark"
+                : timerMode === 'mini-focus'
+                  ? "bg-indigo-500 hover:bg-indigo-600"
+                  : "bg-task hover:bg-task-dark"
             )}
           >
             {timer.isRunning 
@@ -297,6 +334,48 @@ const Timer: React.FC<TimerProps> = ({
             </Button>
           )}
         </div>
+        
+        {/* Timer Mode Selection */}
+        {!activeTask && !isStudyActive && (
+          <div className="grid grid-cols-2 gap-2 mt-4 mb-4">
+            <Button 
+              variant={timerMode === 'focus' ? "default" : "outline"}
+              onClick={() => changeTimerMode('focus')}
+              className={cn(
+                timerMode === 'focus' ? "bg-task hover:bg-task-dark" : "dark:border-slate-700 dark:hover:bg-slate-800"
+              )}
+            >
+              25min Focus
+            </Button>
+            <Button 
+              variant={timerMode === 'mini-focus' ? "default" : "outline"}
+              onClick={() => changeTimerMode('mini-focus')}
+              className={cn(
+                timerMode === 'mini-focus' ? "bg-indigo-500 hover:bg-indigo-600" : "dark:border-slate-700 dark:hover:bg-slate-800"
+              )}
+            >
+              10min Mini Focus
+            </Button>
+            <Button 
+              variant={timerMode === 'break' ? "default" : "outline"}
+              onClick={() => changeTimerMode('break')}
+              className={cn(
+                timerMode === 'break' ? "bg-green-500 hover:bg-green-600" : "dark:border-slate-700 dark:hover:bg-slate-800"
+              )}
+            >
+              5min Break
+            </Button>
+            <Button 
+              variant={timerMode === 'long-break' ? "default" : "outline"}
+              onClick={() => changeTimerMode('long-break')}
+              className={cn(
+                timerMode === 'long-break' ? "bg-teal-600 hover:bg-teal-700" : "dark:border-slate-700 dark:hover:bg-slate-800"
+              )}
+            >
+              15min Long Break
+            </Button>
+          </div>
+        )}
         
         {/* Study Mode toggle */}
         {!activeTask && (
