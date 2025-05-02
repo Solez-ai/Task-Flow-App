@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TaskForm from './TaskForm';
@@ -153,7 +152,7 @@ const TaskFlowTimer: React.FC = () => {
           onResetActiveTask={() => setActiveTask(null)}
         />
         
-        {/* Add Music Player below the Timer */}
+        {/* Music Player positioned below the Timer */}
         <MusicPlayer />
         
         <DailyStatsPanel stats={stats} onResetStats={resetStats} />
