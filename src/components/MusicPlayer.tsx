@@ -20,52 +20,6 @@ import { toast } from 'sonner';
 import AudioFileUploader from './AudioFileUploader';
 import MusicLibrary, { Track } from './MusicLibrary';
 
-// Define music tracks with the user's provided links
-const presetMusicTracks: Track[] = [
-  {
-    id: 1,
-    title: "Quiet Night",
-    artist: "Lofi Beat",
-    src: "https://pixabay.com/music/beats-quiet-night-lofi-332744/",
-    isUserUploaded: false
-  },
-  {
-    id: 2,
-    title: "Lofi Coffee",
-    artist: "Lofi Beat",
-    src: "https://pixabay.com/music/beats-lofi-coffee-332824/",
-    isUserUploaded: false
-  },
-  {
-    id: 3,
-    title: "Lofi Rain",
-    artist: "Lofi Music",
-    src: "https://pixabay.com/music/beats-lofi-rain-lofi-music-332732/",
-    isUserUploaded: false
-  },
-  {
-    id: 4,
-    title: "Coffee Lofi Chill",
-    artist: "Lofi Music",
-    src: "https://pixabay.com/music/beats-coffee-lofi-chill-lofi-music-332738/",
-    isUserUploaded: false
-  },
-  {
-    id: 5,
-    title: "Rainy Lofi City",
-    artist: "Lofi Music",
-    src: "https://pixabay.com/music/beats-rainy-lofi-city-lofi-music-332746/",
-    isUserUploaded: false
-  },
-  {
-    id: 6,
-    title: "Soft Calm",
-    artist: "Upbeat Background",
-    src: "https://pixabay.com/music/upbeat-background-music-soft-calm-333111/",
-    isUserUploaded: false
-  }
-];
-
 const MusicPlayer: React.FC = () => {
   const { theme } = useTheme();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -83,9 +37,15 @@ const MusicPlayer: React.FC = () => {
     return savedTracks ? JSON.parse(savedTracks) : [];
   });
   
-  // Combine preset tracks with user tracks
-  const allTracks = [...presetMusicTracks, ...userTracks];
-  const currentTrack = allTracks[currentTrackIndex];
+  // Only use user tracks (no preset tracks)
+  const allTracks = userTracks;
+  const currentTrack = allTracks[currentTrackIndex] || {
+    id: 'placeholder',
+    title: 'No tracks available',
+    artist: 'Please upload music',
+    src: '',
+    isUserUploaded: true
+  };
 
   // Save user tracks to localStorage when they change
   useEffect(() => {
@@ -94,12 +54,8 @@ const MusicPlayer: React.FC = () => {
 
   // Fix for the Pixabay links to get the actual audio file
   const getAudioUrl = (pixabayUrl: string) => {
-    // Pixabay links need special handling as they're not direct download links
-    // This pattern transforms the display URLs to actual audio file URLs
-    // For example: transforms the webpage URL to actual audio file URL
-    
     // Check if it's already a usable audio URL
-    if (pixabayUrl.endsWith('.mp3') || pixabayUrl.startsWith('blob:')) return pixabayUrl;
+    if (pixabayUrl.endsWith('.mp3') || pixabayUrl.startsWith('blob:') || !pixabayUrl) return pixabayUrl;
     
     // For actual implementation, you would need to handle proper audio file URLs
     // For now, we'll use the demo audio files as fallbacks
@@ -109,7 +65,7 @@ const MusicPlayer: React.FC = () => {
   useEffect(() => {
     // Create audio element
     if (!audioRef.current) {
-      audioRef.current = new Audio(getAudioUrl(currentTrack.src));
+      audioRef.current = new Audio(currentTrack?.src ? getAudioUrl(currentTrack.src) : '');
       
       // Set up audio event listeners
       audioRef.current.addEventListener('loadedmetadata', () => {
@@ -141,14 +97,14 @@ const MusicPlayer: React.FC = () => {
 
   // Handle track changes
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && currentTrack?.src) {
       audioRef.current.src = getAudioUrl(currentTrack.src);
       audioRef.current.load();
       if (isPlaying) {
         audioRef.current.play().catch(err => console.log("Playback error:", err));
       }
     }
-  }, [currentTrackIndex, currentTrack.src]);
+  }, [currentTrackIndex, currentTrack?.src]);
 
   // Handle volume changes
   useEffect(() => {
@@ -177,7 +133,14 @@ const MusicPlayer: React.FC = () => {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play().catch(err => console.log("Playback error:", err));
+        if (!currentTrack?.src) {
+          toast.error("Please upload music to play");
+          return;
+        }
+        audioRef.current.play().catch(err => {
+          console.log("Playback error:", err);
+          toast.error("Error playing track. Please try another file.");
+        });
       }
       setIsPlaying(!isPlaying);
     }
@@ -190,11 +153,19 @@ const MusicPlayer: React.FC = () => {
   };
 
   const nextTrack = () => {
+    if (allTracks.length === 0) {
+      toast.info("No tracks available. Please upload music.");
+      return;
+    }
     const newIndex = (currentTrackIndex + 1) % allTracks.length;
     setCurrentTrackIndex(newIndex);
   };
 
   const prevTrack = () => {
+    if (allTracks.length === 0) {
+      toast.info("No tracks available. Please upload music.");
+      return;
+    }
     const newIndex = (currentTrackIndex - 1 + allTracks.length) % allTracks.length;
     setCurrentTrackIndex(newIndex);
   };
@@ -242,18 +213,33 @@ const MusicPlayer: React.FC = () => {
     };
     
     setUserTracks(prev => [...prev, newTrack]);
+    
+    // If this is the first track, set it as current
+    if (userTracks.length === 0) {
+      setCurrentTrackIndex(0);
+    }
   };
 
   const handleDeleteTrack = (id: string | number) => {
     // Find the track to get its URL
     const trackToDelete = userTracks.find(track => track.id === id);
     
-    // If the current track is being deleted, switch to the first track
+    // If the current track is being deleted, switch to another track or show empty state
     if (currentTrack && currentTrack.id === id) {
-      setCurrentTrackIndex(0);
-    } else if (currentTrackIndex >= presetMusicTracks.length) {
-      // Adjust currentTrackIndex if needed
-      const deletedIndex = allTracks.findIndex(track => track.id === id);
+      if (userTracks.length <= 1) {
+        // If this is the only track, reset player
+        setCurrentTrackIndex(0);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+        }
+      } else {
+        // Switch to another track
+        setCurrentTrackIndex(currentTrackIndex === 0 ? 1 : 0);
+      }
+    } else if (currentTrackIndex >= userTracks.length - 1) {
+      // Adjust currentTrackIndex if the deleted track is before current
+      const deletedIndex = userTracks.findIndex(track => track.id === id);
       if (deletedIndex !== -1 && deletedIndex < currentTrackIndex) {
         setCurrentTrackIndex(currentTrackIndex - 1);
       }
@@ -289,7 +275,7 @@ const MusicPlayer: React.FC = () => {
     ? 'bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 border-slate-700'
     : 'bg-gradient-to-r from-purple-50 via-purple-100 to-purple-50 border-purple-200';
 
-  const [showUploader, setShowUploader] = useState(false);
+  const [showUploader, setShowUploader] = useState(true);
 
   return (
     <Card className={cn(
@@ -334,17 +320,17 @@ const MusicPlayer: React.FC = () => {
             "font-bold text-base",
             theme === 'dark' ? 'text-white' : 'text-gray-800'
           )}>
-            {currentTrack.title}
+            {currentTrack?.title || "No music available"}
           </h4>
           <p className={cn(
             "text-sm",
             theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
           )}>
-            {currentTrack.artist} {currentTrack.isUserUploaded && '(Uploaded)'}
+            {currentTrack?.artist || "Upload music to start playing"} {currentTrack?.isUserUploaded && '(Uploaded)'}
           </p>
         </div>
 
-        {/* Audio File Uploader (Togglable) */}
+        {/* Audio File Uploader (Always shown initially since there's no preset music) */}
         {showUploader && (
           <AudioFileUploader onFileUpload={handleFileUpload} />
         )}
@@ -359,6 +345,7 @@ const MusicPlayer: React.FC = () => {
               theme === 'dark' ? 'border-purple-700 hover:bg-purple-900' : 'border-purple-300 hover:bg-purple-100'
             )} 
             onClick={prevTrack}
+            disabled={userTracks.length === 0}
           >
             <SkipBack className="h-4 w-4" />
           </Button>
@@ -371,6 +358,7 @@ const MusicPlayer: React.FC = () => {
                 ? 'bg-purple-600 hover:bg-purple-700' 
                 : 'bg-purple-500 hover:bg-purple-600'
             )}
+            disabled={userTracks.length === 0}
           >
             {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
           </Button>
@@ -383,6 +371,7 @@ const MusicPlayer: React.FC = () => {
               theme === 'dark' ? 'border-purple-700 hover:bg-purple-900' : 'border-purple-300 hover:bg-purple-100'
             )} 
             onClick={nextTrack}
+            disabled={userTracks.length === 0}
           >
             <SkipForward className="h-4 w-4" />
           </Button>
@@ -397,6 +386,7 @@ const MusicPlayer: React.FC = () => {
                 ? (theme === 'dark' ? 'bg-purple-700 text-white' : 'bg-purple-200 text-purple-800') 
                 : (theme === 'dark' ? 'border-purple-700 hover:bg-purple-900' : 'border-purple-300 hover:bg-purple-100')
             )}
+            disabled={userTracks.length === 0}
           >
             <Repeat className="h-4 w-4" />
           </Button>
