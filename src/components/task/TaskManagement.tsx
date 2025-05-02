@@ -34,11 +34,14 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   }, [tasks]);
 
   const addTask = (text: string, timeInMinutes?: number, important?: boolean) => {
+    // Ensure timeInMinutes is a valid number between 1-120, or default to 25
+    const validTime = timeInMinutes ? Math.max(1, Math.min(timeInMinutes, 120)) : undefined;
+    
     const newTask = {
       id: Math.random().toString(36).substring(2, 9),
       text,
       completed: false,
-      timeInMinutes,
+      timeInMinutes: validTime,
       note: '',
       important
     };

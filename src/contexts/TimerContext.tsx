@@ -59,7 +59,7 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
 
   // Set initial time based on active task, study mode or timer mode
   const getInitialTime = () => {
-    if (activeTask) return activeTask.timeInMinutes! * 60;
+    if (activeTask && activeTask.timeInMinutes) return activeTask.timeInMinutes * 60;
     if (timerMode === 'study') return studyState === 'focus' ? 25 * 60 : 5 * 60;
     
     // Add time for different modes
@@ -139,9 +139,16 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
   useEffect(() => {
     if (activeTask) {
       timer.reset();
-      timer.setTimerDuration(activeTask.timeInMinutes || 25);
+      const taskTime = activeTask.timeInMinutes || 25;
+      timer.setTimerDuration(taskTime);
       setTimerMode('focus');
       setIsStudyActive(false);
+      // Notify the user that we're using the task's specific time
+      if (activeTask.timeInMinutes) {
+        toast.info(`Starting timer for: ${activeTask.text}`, {
+          description: `${activeTask.timeInMinutes} minute timer set`
+        });
+      }
     }
   }, [activeTask]);
 

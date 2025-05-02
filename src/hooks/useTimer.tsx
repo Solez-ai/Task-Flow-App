@@ -82,7 +82,9 @@ export const useTimer = ({ initialTime, onComplete }: TimerOptions): TimerContro
   };
 
   const setTimerDuration = (minutes: number) => {
-    const seconds = minutes * 60;
+    // Ensure minutes is a valid number
+    const validMinutes = Math.max(1, Math.min(minutes || 25, 120));
+    const seconds = validMinutes * 60;
     setTimeLeft(seconds);
     setTotalTime(seconds);
   };
