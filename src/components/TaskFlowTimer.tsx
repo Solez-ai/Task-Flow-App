@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TaskForm from './TaskForm';
@@ -152,7 +153,17 @@ const TaskFlowTimer: React.FC = () => {
           onResetActiveTask={() => setActiveTask(null)}
         />
         
-        {/* Music Player positioned below the Timer */}
+        {/* Task Form - Now positioned above the Music Player */}
+        <Card className="mt-8 dark:bg-slate-900 dark:border-slate-800">
+          <CardHeader>
+            <CardTitle className="dark:text-gray-200">Add New Task</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TaskForm onAddTask={addTask} />
+          </CardContent>
+        </Card>
+        
+        {/* Music Player positioned below the Task Form */}
         <MusicPlayer />
         
         <DailyStatsPanel stats={stats} onResetStats={resetStats} />
@@ -167,7 +178,6 @@ const TaskFlowTimer: React.FC = () => {
             <CardTitle className="dark:text-gray-200">Tasks</CardTitle>
           </CardHeader>
           <CardContent>
-            <TaskForm onAddTask={addTask} />
             <div className="mt-4">
               <TaskList 
                 tasks={tasks} 
