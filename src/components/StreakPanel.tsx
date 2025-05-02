@@ -5,18 +5,14 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useStats } from '@/contexts/StatsContext';
 
-interface StreakPanelProps {
-  streak: number;
-  completedToday: number;
-}
-
-const StreakPanel: React.FC<StreakPanelProps> = ({
-  streak,
-  completedToday
-}) => {
+const StreakPanel: React.FC = () => {
+  const { stats } = useStats();
+  const { streak, completedTasks } = stats;
+  
   // Only show streak panel if user has completed at least 2 tasks
-  if (completedToday < 2) return null;
+  if (completedTasks < 2) return null;
 
   // Calculate the progress bar percentage for the current day
   const now = new Date();

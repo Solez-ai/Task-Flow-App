@@ -41,12 +41,14 @@ export const useTimerContext = () => {
 interface TimerProviderProps {
   children: React.ReactNode;
   onSessionComplete?: () => void;
+  onStudyRoundComplete?: () => void;
   onResetActiveTask?: () => void;
 }
 
 export const TimerProvider: React.FC<TimerProviderProps> = ({ 
   children, 
   onSessionComplete,
+  onStudyRoundComplete,
   onResetActiveTask 
 }) => {
   const [timerMode, setTimerMode] = useState<TimerMode>('focus');
@@ -116,6 +118,12 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
         toast('Break completed!', {
           description: 'Starting your next focus session!'
         });
+        
+        // Call study round complete callback when a break finishes (completing a full cycle)
+        if (onStudyRoundComplete) {
+          onStudyRoundComplete();
+        }
+        
         timer.start();
       }
     }
@@ -215,6 +223,12 @@ export const TimerProvider: React.FC<TimerProviderProps> = ({
         timer.reset();
         timer.setTimerDuration(25);
         setPomodoroCount(prev => prev + 1);
+        
+        // Call study round complete callback when a break is skipped
+        if (onStudyRoundComplete) {
+          onStudyRoundComplete();
+        }
+        
         toast.info('Starting next focus session');
         timer.start();
       }

@@ -5,18 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, Clock, CheckCircle, BarChart, RefreshCw, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DailyStats } from '@/hooks/useDailyStats';
+import { useStats } from '@/contexts/StatsContext';
 import StatCard from './stats/StatCard';
+import { toast } from 'sonner';
 
-interface DailyStatsPanelProps {
-  stats: DailyStats;
-  onResetStats: () => void;
-}
-
-const DailyStatsPanel: React.FC<DailyStatsPanelProps> = ({
-  stats,
-  onResetStats
-}) => {
+const DailyStatsPanel: React.FC = () => {
+  const { stats, resetStats } = useStats();
   const [isOpen, setIsOpen] = React.useState(true);
 
   // Format minutes into hours and minutes
@@ -27,6 +21,13 @@ const DailyStatsPanel: React.FC<DailyStatsPanelProps> = ({
       return `${hours}h ${mins}m`;
     }
     return `${mins}m`;
+  };
+  
+  const handleResetStats = () => {
+    resetStats();
+    toast.info("Daily stats have been reset", {
+      description: "Starting fresh for today's productivity"
+    });
   };
 
   return (
@@ -79,7 +80,7 @@ const DailyStatsPanel: React.FC<DailyStatsPanelProps> = ({
             </div>
             
             <div className="flex justify-end mt-4">
-              <Button variant="outline" size="sm" onClick={onResetStats} className="text-muted-foreground">
+              <Button variant="outline" size="sm" onClick={handleResetStats} className="text-muted-foreground">
                 <RefreshCw className="h-3 w-3 mr-1" />
                 Clear Today's Stats
               </Button>

@@ -13,6 +13,7 @@ import { Task } from './TaskItem';
 
 interface TimerProps {
   onSessionComplete?: () => void;
+  onStudyRoundComplete?: () => void;
   activeTask?: Task | null;
   onResetActiveTask?: () => void;
 }
@@ -75,6 +76,7 @@ import { useTimerContext } from '@/contexts/TimerContext';
 
 const Timer: React.FC<TimerProps> = ({
   onSessionComplete,
+  onStudyRoundComplete,
   activeTask,
   onResetActiveTask
 }) => {
@@ -82,6 +84,7 @@ const Timer: React.FC<TimerProps> = ({
     <TimerProvider 
       onSessionComplete={onSessionComplete}
       onResetActiveTask={onResetActiveTask}
+      onStudyRoundComplete={onStudyRoundComplete}
     >
       <Card className="overflow-hidden">
         <TimerContent />

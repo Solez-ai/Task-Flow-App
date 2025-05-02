@@ -8,7 +8,7 @@ import DailyStatsPanel from './DailyStatsPanel';
 import StreakPanel from './StreakPanel';
 import MusicPlayer from './MusicPlayer';
 import { Task } from './TaskItem';
-import { useDailyStats } from '@/hooks/useDailyStats';
+import { useStats } from '@/contexts/StatsContext';
 import { useBadges } from '@/hooks/useBadges';
 import { toast } from 'sonner';
 import Header from './Header';
@@ -26,7 +26,7 @@ const TaskFlowTimer: React.FC = () => {
     addCompletedTask,
     addStudyModeRound,
     resetStats
-  } = useDailyStats();
+  } = useStats();
   
   const {
     processStats,
@@ -179,6 +179,7 @@ const TaskFlowTimer: React.FC = () => {
           onSessionComplete={handleSessionComplete} 
           activeTask={activeTask} 
           onResetActiveTask={() => setActiveTask(null)} 
+          onStudyRoundComplete={handleStudyRoundComplete}
         />
         
         {/* TASK SECTION */}
