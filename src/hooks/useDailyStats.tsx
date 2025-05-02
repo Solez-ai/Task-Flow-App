@@ -21,19 +21,25 @@ export const useDailyStats = () => {
     if (savedStats && savedDate === today) {
       return JSON.parse(savedStats);
     } else {
-      // Check if we need to reset streak
+      // Get the last streak and check if we need to maintain it
       const lastTaskDate = localStorage.getItem('lastTaskDate');
       let streak = 0;
       
       if (lastTaskDate) {
-        // Get the difference in days between now and the last task completion
+        // Format date to YYYY-MM-DD for comparison
+        const formatDate = (date: Date): string => {
+          return date.toISOString().split('T')[0];
+        };
+        
         const lastDate = new Date(lastTaskDate);
         const currentDate = new Date();
-        const diffTime = Math.abs(currentDate.getTime() - lastDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        // If less than 2 days have passed, keep the streak
-        if (diffDays < 2) {
+        // Check if yesterday
+        const yesterday = new Date(currentDate);
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        if (formatDate(lastDate) === formatDate(yesterday)) {
+          // If the last task was completed yesterday, maintain streak
           const oldStats = localStorage.getItem('dailyStats');
           streak = oldStats ? JSON.parse(oldStats).streak : 0;
         }
@@ -74,16 +80,16 @@ export const useDailyStats = () => {
       // Increment completed tasks
       const newCompletedTasks = prev.completedTasks + 1;
       
-      // Update streak logic
+      // Update streak logic based on new requirements
       let newStreak = prev.streak;
       
-      // If this is the second task completed today, start a streak if there wasn't one
+      // If this is the second task completed today, start a streak of 1 if not already started
       if (newCompletedTasks === 2) {
         newStreak = newStreak === 0 ? 1 : newStreak;
-      }
-      // If we already have 2 or more tasks completed and there was no streak, start one
-      else if (newCompletedTasks > 2 && newStreak === 0) {
-        newStreak = 1;
+      } 
+      // If they completed more than 2 tasks and did one more, increment the streak
+      else if (newCompletedTasks > 2 && newCompletedTasks > prev.completedTasks) {
+        newStreak += 1;
       }
       
       return {
