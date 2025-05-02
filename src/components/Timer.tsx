@@ -2,12 +2,16 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Pause, RefreshCw, Coffee, Clock, X, SkipForward } from 'lucide-react';
+import { Clock, X } from 'lucide-react';
 import { useTimer } from '@/hooks/useTimer';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Task } from './TaskItem';
-import { Badge } from '@/components/ui/badge';
+import { getTimerModeName, getTimerTheme } from '@/utils/timerUtils';
+import TimerDisplay from './timer/TimerDisplay';
+import TimerControls from './timer/TimerControls';
+import TimerModeSelector from './timer/TimerModeSelector';
+import ActiveTaskDisplay from './timer/ActiveTaskDisplay';
 
 interface TimerProps {
   onSessionComplete?: () => void;
@@ -115,37 +119,7 @@ const Timer: React.FC<TimerProps> = ({
     }
   }, [timerMode, studyState]);
 
-  // Format time for display (mm:ss)
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-  
-  // Helper function to get name of current timer mode
-  const getTimerModeName = () => {
-    if (activeTask) return 'Task Timer';
-    if (timerMode === 'study') return studyState === 'focus' ? 'Study Focus' : 'Study Break';
-    if (timerMode === 'mini-focus') return 'Mini Focus';
-    if (timerMode === 'long-break') return 'Long Break';
-    return timerMode === 'focus' ? 'Focus Time' : 'Break Time';
-  };
-
-  // Set color theme based on timer mode
-  const getTimerTheme = () => {
-    if (activeTask) return 'bg-task text-white';
-    if (timerMode === 'study') {
-      return studyState === 'focus' 
-        ? 'bg-blue-500 text-white' 
-        : 'bg-emerald-500 text-white';
-    }
-    if (timerMode === 'mini-focus') return 'bg-indigo-500 text-white';
-    if (timerMode === 'long-break') return 'bg-teal-600 text-white';
-    return timerMode === 'focus' 
-      ? 'bg-task text-white' 
-      : 'bg-green-500 text-white';
-  };
-
+  // Start study mode
   const startStudyMode = () => {
     setTimerMode('study');
     setIsStudyActive(true);
@@ -159,6 +133,7 @@ const Timer: React.FC<TimerProps> = ({
     });
   };
 
+  // Stop study mode
   const stopStudyMode = () => {
     setIsStudyActive(false);
     setTimerMode('focus');
@@ -230,13 +205,22 @@ const Timer: React.FC<TimerProps> = ({
     });
   };
 
+  // Toggle study mode
+  const toggleStudyMode = () => {
+    if (isStudyActive) {
+      stopStudyMode();
+    } else {
+      startStudyMode();
+    }
+  };
+
   return (
     <Card className="overflow-hidden">
-      <CardHeader className={cn("py-3", getTimerTheme())}>
+      <CardHeader className={cn("py-3", getTimerTheme(timerMode, studyState, activeTask))}>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center">
             <Clock className="mr-2 h-5 w-5" />
-            <span>{getTimerModeName()}</span>
+            <span>{getTimerModeName(timerMode, studyState, activeTask)}</span>
           </div>
           
           {activeTask && (
@@ -254,144 +238,40 @@ const Timer: React.FC<TimerProps> = ({
       
       <CardContent className="p-6">
         {/* Show task info if timer is for specific task */}
-        {activeTask && (
-          <div className="mb-4 p-3 bg-task-light rounded-md border border-task/20 dark:bg-slate-800 dark:border-slate-700">
-            <h4 className="font-medium text-task-dark dark:text-task-light mb-1">Current Task:</h4>
-            <p className="text-gray-700 dark:text-gray-300">{activeTask.text}</p>
-          </div>
-        )}
+        <ActiveTaskDisplay 
+          activeTask={activeTask} 
+          onResetActiveTask={() => onResetActiveTask?.()}
+        />
         
         {/* Timer Display */}
-        <div className="text-center mb-6">
-          <div className="text-5xl font-mono font-bold mb-2 dark:text-gray-200">
-            {formatTime(timer.timeLeft)}
-          </div>
-          
-          {/* Progress indicator */}
-          <div className="h-1 w-full bg-gray-200 rounded-full dark:bg-slate-700">
-            <div 
-              className={cn(
-                "h-1 rounded-full transition-all duration-300",
-                timerMode === 'break' || timerMode === 'long-break' || (timerMode === 'study' && studyState === 'break') 
-                  ? "bg-green-500" 
-                  : timerMode === 'mini-focus' 
-                    ? "bg-indigo-500" 
-                    : "bg-task"
-              )}
-              style={{ 
-                width: `${(timer.timeLeft / timer.totalTime) * 100}%` 
-              }}
-            />
-          </div>
-          
-          {/* Study mode counter */}
-          {isStudyActive && (
-            <div className="mt-2">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                Round {pomodoroCount}
-              </Badge>
-            </div>
-          )}
-        </div>
+        <TimerDisplay 
+          timeLeft={timer.timeLeft}
+          totalTime={timer.totalTime}
+          timerMode={timerMode}
+          studyState={studyState}
+          isStudyActive={isStudyActive}
+          pomodoroCount={pomodoroCount}
+        />
         
         {/* Timer Controls */}
-        <div className="flex flex-wrap justify-center gap-3 mb-4">
-          {/* Main start/pause button */}
-          <Button 
-            onClick={timer.isRunning ? timer.pause : timer.start} 
-            className={cn(
-              "min-w-[120px]",
-              timerMode === 'break' || timerMode === 'long-break' || (timerMode === 'study' && studyState === 'break')
-                ? "bg-green-500 hover:bg-green-600" 
-                : timerMode === 'mini-focus'
-                  ? "bg-indigo-500 hover:bg-indigo-600"
-                  : "bg-task hover:bg-task-dark"
-            )}
-          >
-            {timer.isRunning 
-              ? <><Pause className="mr-2 h-4 w-4" /> Pause</> 
-              : <><Play className="mr-2 h-4 w-4" /> Start</>
-            }
-          </Button>
-          
-          {/* Reset button */}
-          <Button 
-            onClick={timer.reset} 
-            variant="outline"
-            className="dark:border-slate-700 dark:hover:bg-slate-800"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" /> Reset
-          </Button>
-          
-          {/* Skip button when timer is running */}
-          {timer.isRunning && (
-            <Button 
-              onClick={skipCurrentSession}
-              variant="outline" 
-              className="dark:border-slate-700 dark:hover:bg-slate-800"
-            >
-              <SkipForward className="mr-2 h-4 w-4" /> Skip
-            </Button>
-          )}
-        </div>
+        <TimerControls 
+          isRunning={timer.isRunning}
+          timerMode={timerMode}
+          studyState={studyState}
+          onStart={timer.start}
+          onPause={timer.pause}
+          onReset={timer.reset}
+          onSkip={skipCurrentSession}
+        />
         
         {/* Timer Mode Selection */}
-        {!activeTask && !isStudyActive && (
-          <div className="grid grid-cols-2 gap-2 mt-4 mb-4">
-            <Button 
-              variant={timerMode === 'focus' ? "default" : "outline"}
-              onClick={() => changeTimerMode('focus')}
-              className={cn(
-                timerMode === 'focus' ? "bg-task hover:bg-task-dark" : "dark:border-slate-700 dark:hover:bg-slate-800"
-              )}
-            >
-              25min Focus
-            </Button>
-            <Button 
-              variant={timerMode === 'mini-focus' ? "default" : "outline"}
-              onClick={() => changeTimerMode('mini-focus')}
-              className={cn(
-                timerMode === 'mini-focus' ? "bg-indigo-500 hover:bg-indigo-600" : "dark:border-slate-700 dark:hover:bg-slate-800"
-              )}
-            >
-              10min Mini Focus
-            </Button>
-            <Button 
-              variant={timerMode === 'break' ? "default" : "outline"}
-              onClick={() => changeTimerMode('break')}
-              className={cn(
-                timerMode === 'break' ? "bg-green-500 hover:bg-green-600" : "dark:border-slate-700 dark:hover:bg-slate-800"
-              )}
-            >
-              5min Break
-            </Button>
-            <Button 
-              variant={timerMode === 'long-break' ? "default" : "outline"}
-              onClick={() => changeTimerMode('long-break')}
-              className={cn(
-                timerMode === 'long-break' ? "bg-teal-600 hover:bg-teal-700" : "dark:border-slate-700 dark:hover:bg-slate-800"
-              )}
-            >
-              15min Long Break
-            </Button>
-          </div>
-        )}
-        
-        {/* Study Mode toggle */}
         {!activeTask && (
-          <Button 
-            variant={isStudyActive ? "default" : "outline"}
-            className={cn(
-              "w-full mt-2",
-              isStudyActive 
-                ? "bg-blue-500 hover:bg-blue-600" 
-                : "dark:border-slate-700 dark:hover:bg-slate-800"
-            )}
-            onClick={isStudyActive ? stopStudyMode : startStudyMode}
-          >
-            <Coffee className="mr-2 h-4 w-4" />
-            {isStudyActive ? "Exit Study Mode" : "Enter Study Mode"}
-          </Button>
+          <TimerModeSelector
+            timerMode={timerMode}
+            isStudyActive={isStudyActive}
+            onChangeMode={changeTimerMode}
+            onToggleStudy={toggleStudyMode}
+          />
         )}
       </CardContent>
     </Card>
