@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
@@ -7,9 +8,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TaskCalendar from './TaskCalendar';
 import Calculator from './Calculator';
+
 interface HeaderProps {
   tasks: Array<any>; // We'll type this properly when we use it
 }
+
 const Header: React.FC<HeaderProps> = ({
   tasks
 }) => {
@@ -21,11 +24,13 @@ const Header: React.FC<HeaderProps> = ({
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+
   const handleAIAssistantClick = () => {
     toast.info("AI Features Coming Soon", {
       description: "We're working on intelligent features to help you be more productive!"
     });
   };
+
   return <header className="py-4 px-4 sm:px-6 border-b bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 dark:border-slate-800 sticky top-0 z-10">
       <div className="container mx-auto max-w-7xl">
         <div className="flex items-center justify-between">
@@ -78,8 +83,12 @@ const Header: React.FC<HeaderProps> = ({
               </DropdownMenuContent>
             </DropdownMenu>
             
-            {/* Account (placeholder) */}
-            <Button variant="outline" size="sm" className="dark:border-slate-700 dark:text-gray-300 rounded-sm bg-slate-50">
+            {/* Account (placeholder) - Updated styling for better dark/light mode handling */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="bg-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:border-slate-700 dark:text-gray-300 hover:bg-slate-100 transition-colors"
+            >
               <User className="mr-1 h-4 w-4" />
               <span>Account</span>
             </Button>
@@ -197,4 +206,5 @@ const Header: React.FC<HeaderProps> = ({
       <Calculator open={calculatorOpen} onOpenChange={setCalculatorOpen} />
     </header>;
 };
+
 export default Header;
