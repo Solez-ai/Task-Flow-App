@@ -18,15 +18,21 @@ const StreakPanel: React.FC<StreakPanelProps> = ({
   // Only show streak panel if user has completed at least 2 tasks
   if (completedToday < 2) return null;
 
-  // Calculate the progress bar percentage for the next day
+  // Calculate the progress bar percentage for the current day
   const now = new Date();
+  
+  // Get the start of the day (midnight of current day)
+  const startOfDay = new Date(now);
+  startOfDay.setHours(0, 0, 0, 0);
+  
+  // Get the end of the day (23:59:59.999)
   const endOfDay = new Date(now);
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Calculate progress percentage based on time remaining in the day
-  const totalDayMilliseconds = 24 * 60 * 60 * 1000;
-  const millisecondsPassed = endOfDay.getTime() - now.getTime();
-  const timeProgress = 100 - (millisecondsPassed / totalDayMilliseconds) * 100;
+  // Calculate progress percentage based on time elapsed since start of day
+  const totalDayMilliseconds = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  const millisecondsPassed = now.getTime() - startOfDay.getTime();
+  const timeProgress = (millisecondsPassed / totalDayMilliseconds) * 100;
 
   return (
     <Card className="mt-2 dark:bg-slate-900 dark:border-slate-800 overflow-hidden shadow-md border-amber-100 dark:border-amber-800/30">
@@ -64,8 +70,8 @@ const StreakPanel: React.FC<StreakPanelProps> = ({
         
         <div className="mt-4">
           <div className="flex justify-between mb-1 text-xs">
-            <span className="font-medium">Today's countdown</span>
-            <span className="text-muted-foreground">{Math.min(100, Math.round(timeProgress))}% of day elapsed</span>
+            <span className="font-medium">Today's progress</span>
+            <span className="text-muted-foreground">{Math.min(100, Math.round(timeProgress))}% of day completed</span>
           </div>
           <Progress 
             value={Math.min(100, Math.round(timeProgress))} 
