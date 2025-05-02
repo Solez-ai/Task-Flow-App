@@ -1,136 +1,137 @@
 
 import { useState, useEffect } from 'react';
-import { BADGES } from '@/data/badges';
-import { Badge, BadgeProgress } from '@/types/badges';
-import { toast } from 'sonner';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { DailyStats } from './useDailyStats';
+import { Badge } from '@/types/badges';
 
-// Badge notification component
-const BadgeNotification = ({ badge }: { badge: Badge }) => {
-  return (
-    <Alert className="border-2 border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-900/30">
-      <AlertTitle className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
-        <span className="text-2xl">{badge.icon}</span> {badge.name}
-      </AlertTitle>
-      <AlertDescription className="text-amber-700 dark:text-amber-400">
-        {badge.description}
-      </AlertDescription>
-    </Alert>
-  );
+// Helper function to get badges from local storage
+const getSavedBadges = (): Badge[] => {
+  const savedBadges = localStorage.getItem('earnedBadges');
+  return savedBadges ? JSON.parse(savedBadges) : [];
+};
+
+// Helper function to save badges to local storage
+const saveBadges = (badges: Badge[]) => {
+  localStorage.setItem('earnedBadges', JSON.stringify(badges));
 };
 
 export const useBadges = () => {
-  const [earnedBadges, setEarnedBadges] = useState<Badge[]>(() => {
-    const saved = localStorage.getItem('earnedBadges');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [earnedBadges, setEarnedBadges] = useState<Badge[]>(getSavedBadges());
 
-  const [badgeProgress, setBadgeProgress] = useState<BadgeProgress[]>(() => {
-    const saved = localStorage.getItem('badgeProgress');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Save to localStorage whenever badges change
+  // Save badges to localStorage when they change
   useEffect(() => {
-    localStorage.setItem('earnedBadges', JSON.stringify(earnedBadges));
+    saveBadges(earnedBadges);
   }, [earnedBadges]);
 
-  useEffect(() => {
-    localStorage.setItem('badgeProgress', JSON.stringify(badgeProgress));
-  }, [badgeProgress]);
-
-  // Check if a badge is already earned
-  const isBadgeEarned = (badgeId: string): boolean => {
-    return earnedBadges.some(badge => badge.id === badgeId);
+  // Check if badge exists by ID
+  const hasBadge = (id: string): boolean => {
+    return earnedBadges.some(badge => badge.id === id);
   };
 
-  // Function to award a badge
-  const awardBadge = (badgeId: string) => {
-    if (isBadgeEarned(badgeId)) return;
-    
-    const badge = BADGES.find(b => b.id === badgeId);
-    if (!badge) return;
-    
-    const earnedBadge = {
-      ...badge,
-      earned: true,
-      earnedAt: new Date().toISOString()
-    };
-    
-    setEarnedBadges(prev => [...prev, earnedBadge]);
-    
-    // Show a notification
-    toast.custom(() => <BadgeNotification badge={earnedBadge} />, {
-      duration: 6000,
-      position: 'top-right'
-    });
+  // Add a new badge if it doesn't exist already
+  const awardBadge = (badge: Badge) => {
+    if (!hasBadge(badge.id)) {
+      setEarnedBadges(prev => [...prev, badge]);
+      return true;
+    }
+    return false;
   };
 
-  // Update progress for a badge
-  const updateBadgeProgress = (badgeId: string, progress: number, total: number) => {
-    setBadgeProgress(prev => {
-      const existing = prev.find(p => p.id === badgeId);
-      if (existing) {
-        return prev.map(p => p.id === badgeId ? { id: badgeId, progress, total } : p);
+  // Process stats to potentially award badges
+  const processStats = (stats: DailyStats, completedTasksCount?: number): void => {
+    // Helper function to try to award badge and return true if newly awarded
+    const tryAward = (badge: Badge): boolean => {
+      if (!hasBadge(badge.id)) {
+        setEarnedBadges(prev => [...prev, badge]);
+        return true;
       }
-      return [...prev, { id: badgeId, progress, total }];
-    });
+      return false;
+    };
+
+    // Task completion badges
+    if (completedTasksCount) {
+      if (completedTasksCount >= 5 && !hasBadge('task-5')) {
+        tryAward({
+          id: 'task-5',
+          name: 'Task Master',
+          description: 'Completed 5 tasks in a day',
+          category: 'task',
+          icon: '✅'
+        });
+      }
+      if (completedTasksCount >= 10 && !hasBadge('task-10')) {
+        tryAward({
+          id: 'task-10',
+          name: 'Productivity Champion',
+          description: 'Completed 10 tasks in a day',
+          category: 'task',
+          icon: '🏆'
+        });
+      }
+    }
+
+    // Streak badges
+    if (stats.streak >= 3 && !hasBadge('streak-3')) {
+      tryAward({
+        id: 'streak-3',
+        name: 'Consistency Starter',
+        description: 'Maintained a 3-day streak',
+        category: 'streak',
+        icon: '🔥'
+      });
+    }
+    if (stats.streak >= 7 && !hasBadge('streak-7')) {
+      tryAward({
+        id: 'streak-7',
+        name: 'Week Warrior',
+        description: 'Maintained a 7-day streak',
+        category: 'streak',
+        icon: '📆'
+      });
+    }
+
+    // Focus time badges
+    if (stats.focusedTimeMinutes >= 60 && !hasBadge('time-1h')) {
+      tryAward({
+        id: 'time-1h',
+        name: 'Hour of Power',
+        description: 'Focused for 1 hour in a day',
+        category: 'time',
+        icon: '⏱️'
+      });
+    }
+    if (stats.focusedTimeMinutes >= 120 && !hasBadge('time-2h')) {
+      tryAward({
+        id: 'time-2h',
+        name: 'Deep Focus',
+        description: 'Focused for 2 hours in a day',
+        category: 'time',
+        icon: '🧠'
+      });
+    }
+
+    // Study mode badges
+    if (stats.studyModeRounds >= 3 && !hasBadge('study-3')) {
+      tryAward({
+        id: 'study-3',
+        name: 'Study Session',
+        description: 'Completed 3 study rounds in a day',
+        category: 'goal',
+        icon: '📚'
+      });
+    }
   };
 
-  // Get progress for a specific badge
-  const getBadgeProgress = (badgeId: string): BadgeProgress | undefined => {
-    return badgeProgress.find(p => p.id === badgeId);
-  };
-
-  // Process stats to check for earned badges
-  const processStats = (stats: DailyStats, tasksCompletedToday?: number) => {
-    // Streak-based badges
-    if (stats.streak >= 3) awardBadge('streak-3');
-    if (stats.streak >= 5) awardBadge('streak-5');
-    if (stats.streak >= 10) awardBadge('streak-10');
-    if (stats.streak >= 15) awardBadge('streak-15');
-    if (stats.streak >= 30) awardBadge('streak-30');
-    if (stats.streak >= 100) awardBadge('streak-100');
-
-    // Time-based badges
-    if (stats.focusedTimeMinutes >= 25) awardBadge('time-25');
-    if (stats.focusedTimeMinutes >= 100) awardBadge('time-100');
-    if (stats.focusedTimeMinutes >= 500) awardBadge('time-500');
-    if (stats.focusedTimeMinutes >= 1000) awardBadge('time-1000');
-    if (stats.focusedTimeMinutes >= 5000) awardBadge('time-5000');
-
-    // Task-based badges (daily counts)
-    if (stats.completedTasks >= 1) awardBadge('task-1');
+  // Function to track task completion for streaks
+  const trackTaskCompletion = (): number => {
+    // Get count of tasks completed today
+    const totalTasksCompleted = Number(localStorage.getItem('totalTasksCompleted') || '0') + 1;
+    localStorage.setItem('totalTasksCompleted', totalTasksCompleted.toString());
     
-    const dayTasks = tasksCompletedToday || stats.completedTasks;
-    if (dayTasks >= 5) awardBadge('task-5');
-    if (dayTasks >= 10) awardBadge('task-10');
-    
-    // We'd need to store total task count in localStorage for total badges
-    const totalTasks = Number(localStorage.getItem('totalTasksCompleted') || '0');
-    if (totalTasks >= 100) awardBadge('task-100');
-    if (totalTasks >= 1000) awardBadge('task-1000');
-
-    // For goal-based badges, we'd need additional data tracking
-    // that would be implemented later with authentication
-  };
-
-  // Track task completion for badges
-  const trackTaskCompletion = () => {
-    // Increment total tasks completed
-    const totalTasks = Number(localStorage.getItem('totalTasksCompleted') || '0') + 1;
-    localStorage.setItem('totalTasksCompleted', totalTasks.toString());
-    
-    return totalTasks;
+    return totalTasksCompleted;
   };
 
   return {
     earnedBadges,
-    awardBadge,
-    isBadgeEarned,
-    updateBadgeProgress,
-    getBadgeProgress,
     processStats,
     trackTaskCompletion
   };

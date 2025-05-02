@@ -1,85 +1,99 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-interface UseTimerProps {
-  initialTime?: number;
-  autostart?: boolean;
+interface TimerOptions {
+  initialTime: number;
   onComplete?: () => void;
 }
 
-export const useTimer = ({ 
-  initialTime = 25 * 60, // Default 25 minutes in seconds
-  autostart = false, 
-  onComplete 
-}: UseTimerProps = {}) => {
-  const [time, setTime] = useState(initialTime);
-  const [isActive, setIsActive] = useState(autostart);
-  const [isPaused, setIsPaused] = useState(false);
+interface TimerControls {
+  timeLeft: number;
+  totalTime: number;
+  isRunning: boolean;
+  start: () => void;
+  pause: () => void;
+  reset: () => void;
+  setTimerDuration: (minutes: number) => void;
+}
 
-  const start = useCallback(() => {
-    setIsActive(true);
-    setIsPaused(false);
-  }, []);
+export const useTimer = ({ initialTime, onComplete }: TimerOptions): TimerControls => {
+  const [timeLeft, setTimeLeft] = useState(initialTime);
+  const [totalTime, setTotalTime] = useState(initialTime);
+  const [isRunning, setIsRunning] = useState(false);
+  const intervalRef = useRef<number | null>(null);
+  const onCompleteRef = useRef(onComplete);
 
-  const pause = useCallback(() => {
-    setIsPaused(true);
-  }, []);
-
-  const resume = useCallback(() => {
-    setIsPaused(false);
-  }, []);
-
-  const reset = useCallback(() => {
-    setTime(initialTime);
-    setIsActive(false);
-    setIsPaused(false);
-  }, [initialTime]);
-
-  const setTimerDuration = useCallback((minutes: number) => {
-    const newTime = minutes * 60;
-    setTime(newTime);
-  }, []);
-
+  // Update ref when onComplete prop changes
   useEffect(() => {
-    let interval: number | null = null;
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
-    if (isActive && !isPaused) {
-      interval = window.setInterval(() => {
-        setTime((time) => {
-          if (time <= 1) {
-            if (interval) clearInterval(interval);
-            if (onComplete) onComplete();
-            setIsActive(false);
-            return 0;
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
+  // Timer tick effect
+  useEffect(() => {
+    if (!isRunning) return;
+
+    intervalRef.current = window.setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          // Timer complete
+          clearInterval(intervalRef.current as number);
+          setIsRunning(false);
+          
+          // Call onComplete callback if provided
+          if (onCompleteRef.current) {
+            onCompleteRef.current();
           }
-          return time - 1;
-        });
-      }, 1000);
-    } else if (interval) {
-      clearInterval(interval);
-    }
+          
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+      }
     };
-  }, [isActive, isPaused, onComplete]);
+  }, [isRunning]);
 
-  const minutes = Math.floor(time / 60);
-  const seconds = time % 60;
+  const start = () => {
+    if (timeLeft > 0) {
+      setIsRunning(true);
+    }
+  };
 
-  const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  const percentComplete = ((initialTime - time) / initialTime) * 100;
+  const pause = () => {
+    setIsRunning(false);
+  };
+
+  const reset = () => {
+    setIsRunning(false);
+    setTimeLeft(totalTime);
+  };
+
+  const setTimerDuration = (minutes: number) => {
+    const seconds = minutes * 60;
+    setTimeLeft(seconds);
+    setTotalTime(seconds);
+  };
 
   return {
-    time,
-    formattedTime,
-    percentComplete,
-    isActive,
-    isPaused,
+    timeLeft,
+    totalTime,
+    isRunning,
     start,
     pause,
-    resume,
     reset,
-    setTimerDuration,
+    setTimerDuration
   };
 };
