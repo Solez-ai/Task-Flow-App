@@ -153,7 +153,7 @@ const TaskFlowTimer: React.FC = () => {
           </Card>
           
           <Card className="dark:bg-slate-900 dark:border-slate-800">
-            <CardHeader className="my-0 py-[11px]">
+            <CardHeader className="py-[11px] my-[13px]">
               <CardTitle className="dark:text-gray-200">Tasks</CardTitle>
             </CardHeader>
             <CardContent>
