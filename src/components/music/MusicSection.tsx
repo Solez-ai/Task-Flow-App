@@ -34,15 +34,15 @@ const MusicSection: React.FC<MusicSectionProps> = ({
           </TabsList>
           
           <TabsContent value="player" className="m-0">
-            <MusicPlayer compact={layoutMode === 'phone'} />
+            <MusicPlayer />
           </TabsContent>
           
           <TabsContent value="library" className="m-0">
-            <MusicLibrary compact={layoutMode === 'phone'} />
+            <MusicLibrary />
           </TabsContent>
           
           <TabsContent value="upload" className="m-0">
-            <AudioFileUploader compact={layoutMode === 'phone'} />
+            <AudioFileUploader />
           </TabsContent>
         </Tabs>
       </CardContent>

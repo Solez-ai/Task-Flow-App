@@ -8,7 +8,7 @@ interface TimerControlsProps {
   isRunning: boolean;
   timerMode: 'focus' | 'break' | 'study' | 'mini-focus' | 'long-break';
   studyState: 'focus' | 'break';
-  isStudyActive?: boolean; // Added this prop to check if study mode is active
+  isStudyActive?: boolean;
   onStart: () => void;
   onPause: () => void;
   onReset: () => void;
@@ -19,7 +19,7 @@ const TimerControls: React.FC<TimerControlsProps> = ({
   isRunning,
   timerMode,
   studyState,
-  isStudyActive = false, // Default to false if not provided
+  isStudyActive = false,
   onStart,
   onPause,
   onReset,

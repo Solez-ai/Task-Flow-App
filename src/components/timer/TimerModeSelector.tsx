@@ -10,13 +10,15 @@ interface TimerModeSelectorProps {
   isStudyActive: boolean;
   onChangeMode: (mode: 'focus' | 'break' | 'mini-focus' | 'long-break') => void;
   onToggleStudy: () => void;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 const TimerModeSelector: React.FC<TimerModeSelectorProps> = ({
   timerMode,
   isStudyActive,
   onChangeMode,
-  onToggleStudy
+  onToggleStudy,
+  size = 'md'
 }) => {
   const { theme } = useTheme();
   
@@ -30,7 +32,8 @@ const TimerModeSelector: React.FC<TimerModeSelectorProps> = ({
           className={cn(
             timerMode === 'focus' && !isStudyActive 
               ? "bg-task hover:bg-task-dark" 
-              : "dark:border-slate-700 dark:hover:bg-slate-800"
+              : "dark:border-slate-700 dark:hover:bg-slate-800",
+            size === 'sm' ? "text-xs py-1" : ""
           )}
           onClick={() => onChangeMode('focus')}
         >
@@ -43,7 +46,8 @@ const TimerModeSelector: React.FC<TimerModeSelectorProps> = ({
           className={cn(
             timerMode === 'break' && !isStudyActive
               ? "bg-green-500 hover:bg-green-600"
-              : "dark:border-slate-700 dark:hover:bg-slate-800"
+              : "dark:border-slate-700 dark:hover:bg-slate-800",
+            size === 'sm' ? "text-xs py-1" : ""
           )}
           onClick={() => onChangeMode('break')}
         >
@@ -56,7 +60,8 @@ const TimerModeSelector: React.FC<TimerModeSelectorProps> = ({
           className={cn(
             timerMode === 'mini-focus'
               ? "bg-indigo-500 hover:bg-indigo-600"
-              : "dark:border-slate-700 dark:hover:bg-slate-800"
+              : "dark:border-slate-700 dark:hover:bg-slate-800",
+            size === 'sm' ? "text-xs py-1" : ""
           )}
           onClick={() => onChangeMode('mini-focus')}
         >
@@ -69,7 +74,8 @@ const TimerModeSelector: React.FC<TimerModeSelectorProps> = ({
           className={cn(
             timerMode === 'long-break'
               ? "bg-green-600 hover:bg-green-700"
-              : "dark:border-slate-700 dark:hover:bg-slate-800"
+              : "dark:border-slate-700 dark:hover:bg-slate-800",
+            size === 'sm' ? "text-xs py-1" : ""
           )}
           onClick={() => onChangeMode('long-break')}
         >
@@ -84,7 +90,8 @@ const TimerModeSelector: React.FC<TimerModeSelectorProps> = ({
           "w-full mt-2",
           isStudyActive 
             ? "bg-blue-500 hover:bg-blue-600" 
-            : "dark:border-slate-700 dark:hover:bg-slate-800"
+            : "dark:border-slate-700 dark:hover:bg-slate-800",
+          size === 'sm' ? "text-xs py-1" : ""
         )}
         onClick={onToggleStudy}
       >

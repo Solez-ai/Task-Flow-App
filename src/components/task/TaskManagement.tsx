@@ -18,7 +18,14 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   startTaskTimer,
   layoutMode = 'pc'
 }) => {
-  const handleAddTask = (newTask: Task) => {
+  const handleAddTask = (taskText: string, timeInMinutes?: number, important?: boolean) => {
+    const newTask: Task = {
+      id: Date.now().toString(),
+      text: taskText,
+      completed: false,
+      timeInMinutes,
+      important
+    };
     setTasks([...tasks, newTask]);
   };
 
@@ -45,20 +52,39 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     }));
   };
 
+  const handleUpdateNote = (taskId: string, note: string) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId) {
+        return { ...task, note };
+      }
+      return task;
+    }));
+  };
+
+  const handleToggleImportant = (taskId: string) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId) {
+        return { ...task, important: !task.important };
+      }
+      return task;
+    }));
+  };
+
   return (
     <Card className={`${layoutMode === 'phone' ? 'mb-4' : 'mb-8'} shadow-md`}>
       <CardHeader className={layoutMode === 'phone' ? 'pb-2' : ''}>
         <CardTitle className={layoutMode === 'phone' ? 'text-lg' : ''}>Tasks</CardTitle>
       </CardHeader>
       <CardContent className={layoutMode === 'phone' ? 'pt-0' : ''}>
-        <TaskForm onAddTask={handleAddTask} compact={layoutMode === 'phone'} />
+        <TaskForm onAddTask={handleAddTask} />
         <TaskList
           tasks={tasks}
-          onDeleteTask={handleDeleteTask}
-          onToggleComplete={handleToggleComplete}
+          onToggle={handleToggleComplete}
+          onDelete={handleDeleteTask}
           onStartTimer={startTaskTimer}
-          onUpdateTask={handleUpdateTask}
-          compact={layoutMode === 'phone'}
+          onShowAIOptions={() => {}}
+          onUpdateNote={handleUpdateNote}
+          onToggleImportant={handleToggleImportant}
         />
       </CardContent>
     </Card>

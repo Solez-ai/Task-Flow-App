@@ -22,7 +22,7 @@ const StatisticsSection: React.FC<StatisticsSectionProps> = ({
       <CardContent className={`${isCompact ? 'pt-0 space-y-2' : 'space-y-4'}`}>
         <DailyStatsPanel />
         <StreakPanel />
-        <BadgeDisplay compact={isCompact} />
+        <BadgeDisplay compact={isCompact} className="mt-4" />
       </CardContent>
     </Card>
   );

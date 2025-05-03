@@ -7,6 +7,7 @@ import TimerModeSelector from './TimerModeSelector';
 import ActiveTaskDisplay from './ActiveTaskDisplay';
 import { Task } from '../TaskItem';
 import { useTimer } from '@/hooks/useTimer';
+import Timer from '../Timer';
 
 interface TimerSectionProps {
   activeTask: Task | null;
@@ -23,67 +24,20 @@ const TimerSection = ({
   onResetActiveTask,
   layoutMode = 'pc'
 }: TimerSectionProps) => {
-  const { 
-    secondsLeft, 
-    timerRunning, 
-    timerMode,
-    timerState,
-    progress,
-    sessionCount,
-    startTimer,
-    pauseTimer,
-    resetTimer,
-    skipBreak,
-    setTimerMode
-  } = useTimer({
-    onTimerComplete: () => {
-      if (timerState === 'focus') {
-        onSessionComplete();
-      } else if (timerState === 'study') {
-        onStudyRoundComplete();
-      }
-    }
-  });
-
-  // Compact layout for phone
+  // We'll use the Timer component instead of integrating directly with useTimer
+  // Phone layout is more compact
   if (layoutMode === 'phone') {
     return (
       <Card className="mb-4 shadow-md">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex justify-between items-center">
-            <span>Timer</span>
-            <TimerModeSelector 
-              timerMode={timerMode} 
-              setTimerMode={setTimerMode}
-              size="sm"
-            />
-          </CardTitle>
+          <CardTitle className="text-lg">Timer</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          {activeTask && (
-            <ActiveTaskDisplay 
-              task={activeTask} 
-              onClear={onResetActiveTask}
-              compact={true}
-            />
-          )}
-          
-          <TimerDisplay 
-            secondsLeft={secondsLeft} 
-            timerState={timerState}
-            progress={progress}
-            sessionCount={sessionCount}
-            compact={true}
-          />
-          
-          <TimerControls 
-            timerRunning={timerRunning}
-            onStart={startTimer}
-            onPause={pauseTimer}
-            onReset={resetTimer}
-            onSkipBreak={skipBreak}
-            timerState={timerState}
-            layout="compact"
+          <Timer 
+            onSessionComplete={onSessionComplete}
+            onStudyRoundComplete={onStudyRoundComplete}
+            activeTask={activeTask}
+            onResetActiveTask={onResetActiveTask}
           />
         </CardContent>
       </Card>
@@ -94,36 +48,14 @@ const TimerSection = ({
   return (
     <Card className="mb-8 shadow-md">
       <CardHeader>
-        <CardTitle className="flex justify-between items-center">
-          <span>Focus Timer</span>
-          <TimerModeSelector 
-            timerMode={timerMode} 
-            setTimerMode={setTimerMode}
-          />
-        </CardTitle>
+        <CardTitle>Focus Timer</CardTitle>
       </CardHeader>
       <CardContent>
-        {activeTask && (
-          <ActiveTaskDisplay 
-            task={activeTask} 
-            onClear={onResetActiveTask} 
-          />
-        )}
-        
-        <TimerDisplay 
-          secondsLeft={secondsLeft} 
-          timerState={timerState}
-          progress={progress}
-          sessionCount={sessionCount}
-        />
-        
-        <TimerControls 
-          timerRunning={timerRunning}
-          onStart={startTimer}
-          onPause={pauseTimer}
-          onReset={resetTimer}
-          onSkipBreak={skipBreak}
-          timerState={timerState}
+        <Timer 
+          onSessionComplete={onSessionComplete}
+          onStudyRoundComplete={onStudyRoundComplete}
+          activeTask={activeTask}
+          onResetActiveTask={onResetActiveTask}
         />
       </CardContent>
     </Card>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,9 +6,10 @@ import { cn } from '@/lib/utils';
 
 interface TaskFormProps {
   onAddTask: (task: string, timeInMinutes?: number, important?: boolean) => void;
+  compact?: boolean;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ onAddTask }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ onAddTask, compact = false }) => {
   const [task, setTask] = useState('');
   const [showTimeInput, setShowTimeInput] = useState(false);
   const [timeInMinutes, setTimeInMinutes] = useState<number>(25);
@@ -27,7 +27,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ onAddTask }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className={cn("space-y-3", compact ? "text-sm" : "")}>
       <div className="flex items-center gap-2">
         <Input
           type="text"
@@ -78,7 +78,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ onAddTask }) => {
         </div>
       )}
 
-      <Button type="submit" className="w-full bg-task hover:bg-task-dark dark:bg-task dark:hover:bg-task-dark">
+      <Button type="submit" className={cn("w-full bg-task hover:bg-task-dark dark:bg-task dark:hover:bg-task-dark", 
+        compact ? "text-sm py-1" : "")}>
         <Plus className="w-5 h-5" />
         <span className="ml-2">Add Task</span>
       </Button>
