@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
 import Auth from './pages/Auth';
@@ -13,6 +13,22 @@ import { StatsProvider } from './contexts/StatsContext';
 import './App.css';
 
 const App = () => {
+  // Listen for storage events to sync across tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith('userMusic') || 
+          e.key && e.key.startsWith('tasks') ||
+          e.key && e.key.startsWith('dailyStats') ||
+          e.key && e.key.startsWith('earnedBadges')) {
+        // Force refresh if key data changed in another tab
+        window.location.reload();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   return (
     <main>
       <AuthProvider>

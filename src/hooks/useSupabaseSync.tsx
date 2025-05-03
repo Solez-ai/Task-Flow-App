@@ -95,6 +95,7 @@ export function useSupabaseSync(
           // Instead we save to localStorage and the next app load will include these
           const allLocalTasks = [...tasks, ...newLocalTasks];
           localStorage.setItem('tasks', JSON.stringify(allLocalTasks));
+          localStorage.setItem('tasksUserId', user.id);
         }
       }
       
@@ -120,10 +121,10 @@ export function useSupabaseSync(
         
       if (fetchError) throw fetchError;
       
-      const existingTitles = new Set((existingTracks || []).map(t => t.title));
+      const existingIds = new Set((existingTracks || []).map(t => t.id));
       
       // Only add tracks that don't already exist in the database
-      const newTracks = userUploadedTracks.filter(track => !existingTitles.has(track.title));
+      const newTracks = userUploadedTracks.filter(track => !existingIds.has(track.id));
       
       if (newTracks.length > 0) {
         for (const track of newTracks) {
@@ -134,6 +135,7 @@ export function useSupabaseSync(
           const { error: insertError } = await supabase
             .from('user_music')
             .insert({
+              id: track.id,
               user_id: user.id,
               title: track.title,
               artist: track.artist,
@@ -154,6 +156,10 @@ export function useSupabaseSync(
       
       // Process tracks from database - currently we don't sync fully here since
       // we don't have the audio files stored properly yet
+      if (dbTracks && dbTracks.length > 0) {
+        // In a future enhancement we could implement proper audio file retrieval from storage
+        // For now, we're just ensuring the metadata is preserved
+      }
     } catch (error) {
       console.error('Error syncing music tracks:', error);
     }
@@ -171,14 +177,13 @@ export function useSupabaseSync(
         .from('user_stats')
         .select('*')
         .eq('user_id', user.id)
-        .eq('date', today)
-        .single();
+        .eq('date', today);
         
       if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows returned
         throw fetchError;
       }
       
-      if (existingStats) {
+      if (existingStats && existingStats.length > 0) {
         // Update existing stats
         const { error: updateError } = await supabase
           .from('user_stats')
@@ -188,7 +193,7 @@ export function useSupabaseSync(
             focused_time_minutes: stats.focusedTimeMinutes,
             study_mode_rounds: stats.studyModeRounds
           })
-          .eq('id', existingStats.id);
+          .eq('id', existingStats[0].id);
           
         if (updateError) throw updateError;
       } else {

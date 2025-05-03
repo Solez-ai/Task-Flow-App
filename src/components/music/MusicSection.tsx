@@ -35,7 +35,8 @@ const MusicSection: React.FC<MusicSectionProps> = ({
   
   // Create a wrapper function that adapts handleDeleteTrack to match the expected signature
   const handleTrackDelete = (id: string | number) => {
-    handleDeleteTrack(id, currentTrackIndex);
+    const newIndex = handleDeleteTrack(id, currentTrackIndex);
+    setCurrentTrackIndex(newIndex);
   };
 
   return (

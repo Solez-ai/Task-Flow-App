@@ -3,24 +3,68 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Track } from '@/components/MusicLibrary';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useUserTracks() {
   const { user } = useAuth();
   const [audioObjectURLs, setAudioObjectURLs] = useState<string[]>([]);
   const [userTracks, setUserTracks] = useState<Track[]>(() => {
-    // Get saved tracks from localStorage
-    const savedTracks = localStorage.getItem('userMusicTracks');
-    const savedTracksUserId = localStorage.getItem('tracksUserId');
-    
-    // Only restore tracks if they belong to the current user or if user is not authenticated
-    if (savedTracks && user && savedTracksUserId === user.id) {
-      return JSON.parse(savedTracks); 
-    } else if (savedTracks && !user && !savedTracksUserId) {
-      // For non-authenticated users, we can still show their local tracks
-      return JSON.parse(savedTracks);
+    try {
+      // Get saved tracks from localStorage
+      const savedTracks = localStorage.getItem('userMusicTracks');
+      const savedTracksUserId = localStorage.getItem('tracksUserId');
+      
+      // Only restore tracks if they belong to the current user
+      if (savedTracks && user && savedTracksUserId === user.id) {
+        return JSON.parse(savedTracks); 
+      } else if (savedTracks && !user && !savedTracksUserId) {
+        // For non-authenticated users, we can still show their local tracks
+        return JSON.parse(savedTracks);
+      }
+    } catch (error) {
+      console.error("Error parsing saved tracks:", error);
     }
     return [];
   });
+  
+  // Load tracks from Supabase when user logs in
+  useEffect(() => {
+    async function loadUserTracks() {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('user_music')
+            .select('*')
+            .eq('user_id', user.id);
+            
+          if (error) throw error;
+          
+          if (data && data.length > 0) {
+            const existingTrackIds = new Set(userTracks.map(track => track.id));
+            
+            // Only add tracks that don't already exist locally
+            const newTracks = data
+              .filter(dbTrack => !existingTrackIds.has(dbTrack.id))
+              .map(dbTrack => ({
+                id: dbTrack.id,
+                title: dbTrack.title,
+                artist: dbTrack.artist || 'My Music',
+                src: dbTrack.storage_path,
+                isUserUploaded: true
+              }));
+              
+            if (newTracks.length > 0) {
+              setUserTracks(prev => [...prev, ...newTracks]);
+            }
+          }
+        } catch (error) {
+          console.error("Error loading tracks from Supabase:", error);
+        }
+      }
+    }
+    
+    loadUserTracks();
+  }, [user]);
   
   // Save user tracks to localStorage when they change
   useEffect(() => {
@@ -59,6 +103,24 @@ export function useUserTracks() {
     };
     
     setUserTracks(prev => [...prev, newTrack]);
+
+    // If user is logged in, save track to Supabase
+    if (user) {
+      supabase
+        .from('user_music')
+        .insert({
+          id,
+          user_id: user.id,
+          title: title,
+          artist: 'My Music',
+          storage_path: objectURL // This is just a placeholder, in a real app we'd upload to storage
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error saving track to Supabase:', error);
+          }
+        });
+    }
     
     // Return the index of the new track
     return userTracks.length;
@@ -94,6 +156,19 @@ export function useUserTracks() {
     // Update user tracks
     setUserTracks(prev => prev.filter(track => track.id !== id));
     toast.success("Track removed from library");
+    
+    // If user is logged in, delete track from Supabase
+    if (user) {
+      supabase
+        .from('user_music')
+        .delete()
+        .eq('id', id)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Error deleting track from Supabase:', error);
+          }
+        });
+    }
     
     return newTrackIndex;
   };

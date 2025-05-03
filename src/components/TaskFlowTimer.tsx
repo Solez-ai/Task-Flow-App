@@ -18,16 +18,20 @@ import { useLayout } from '@/contexts/LayoutContext';
 const TaskFlowTimer: React.FC = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>(() => {
-    // Load tasks from localStorage, but only if they're associated with the current user
-    const savedTasks = localStorage.getItem('tasks');
-    const savedTasksUserId = localStorage.getItem('tasksUserId');
-    
-    // Only restore tasks if they belong to the current user
-    if (savedTasks && user && savedTasksUserId === user.id) {
-      return JSON.parse(savedTasks);
-    } else if (savedTasks && !user && !savedTasksUserId) {
-      // For non-authenticated users, we can still show their local tasks
-      return JSON.parse(savedTasks);
+    try {
+      // Load tasks from localStorage, but only if they're associated with the current user
+      const savedTasks = localStorage.getItem('tasks');
+      const savedTasksUserId = localStorage.getItem('tasksUserId');
+      
+      // Only restore tasks if they belong to the current user
+      if (savedTasks && user && savedTasksUserId === user.id) {
+        return JSON.parse(savedTasks);
+      } else if (savedTasks && !user && !savedTasksUserId) {
+        // For non-authenticated users, we can still show their local tasks
+        return JSON.parse(savedTasks);
+      }
+    } catch (error) {
+      console.error("Error loading tasks:", error);
     }
     return [];
   });
