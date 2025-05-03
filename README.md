@@ -18,7 +18,6 @@ Most productivity tools are bloated with features you’ll never use. FocusFlow 
 ### ⏲️ 1. Pomodoro Focus Modes
 - **Classic Mode**: Manual 25-minute focus sessions + 5-minute breaks.
 - **Study Mode**: Automatically cycles focus/break timers.
-- Color-coded interface (Green for breaks, Purple for focus).
 - Option to **skip breaks** or **auto-start next session**.
 
 ### ✅ 2. Task Manager
@@ -35,11 +34,6 @@ Most productivity tools are bloated with features you’ll never use. FocusFlow 
   - ✔️ Focused time (in minutes)
 - Resets daily for fresh starts.
 
-### 🔥 5. Streak Tracker Widget
-- Displays consecutive days you've worked.
-- Visual fire icons like: `🔥🔥🔥🔥🔥 = 5-Day Streak`
-- Resets on missed days to encourage habit building.
-
 ### 💡 7. Motivational Quotes
 - Displays fresh, inspiring quotes per session.
 - Curated custom quotes included.
@@ -52,14 +46,4 @@ Most productivity tools are bloated with features you’ll never use. FocusFlow 
 #### 🧮 Quick Calculator
 - Built-in simple calculator for fast math.
 - Saves time and avoids breaking focus.
-
-
-### 🎨 9. Theme & Mode Settings
-- Dark/Light mode toggle.
-
-## 🖥️ Tech Stack
-- Typescript Mainly
-- Html, Css, React etc
-- MAINLY USED AI
-- Simple Database Included
 
