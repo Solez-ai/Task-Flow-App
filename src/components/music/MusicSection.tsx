@@ -5,7 +5,9 @@ import MusicPlayer from '../MusicPlayer';
 import MusicLibrary from '../MusicLibrary';
 import AudioFileUploader from '../AudioFileUploader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { useLayout } from '@/contexts/LayoutContext'; 
+import { useLayout } from '@/contexts/LayoutContext';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useUserTracks } from '@/hooks/useUserTracks';
 
 interface MusicSectionProps {
   layoutMode?: 'pc' | 'phone';
@@ -15,7 +17,22 @@ const MusicSection: React.FC<MusicSectionProps> = ({
   layoutMode = 'pc' 
 }) => {
   const [activeTab, setActiveTab] = useState('player');
+  const { userTracks, handleFileUpload, handleDeleteTrack } = useUserTracks();
   
+  const {
+    isPlaying,
+    currentTrackIndex,
+    setCurrentTrackIndex,
+    togglePlay
+  } = useAudioPlayer(userTracks);
+
+  const handleTrackSelect = (index: number) => {
+    setCurrentTrackIndex(index);
+    if (!isPlaying) {
+      togglePlay();
+    }
+  };
+
   return (
     <Card className={`${layoutMode === 'phone' ? 'mb-4' : 'mb-8'} shadow-md`}>
       <CardHeader className={layoutMode === 'phone' ? 'pb-2' : ''}>
@@ -38,11 +55,17 @@ const MusicSection: React.FC<MusicSectionProps> = ({
           </TabsContent>
           
           <TabsContent value="library" className="m-0">
-            <MusicLibrary />
+            <MusicLibrary 
+              tracks={userTracks}
+              currentTrackIndex={currentTrackIndex}
+              isPlaying={isPlaying}
+              onTrackSelect={handleTrackSelect}
+              onDeleteTrack={handleDeleteTrack}
+            />
           </TabsContent>
           
           <TabsContent value="upload" className="m-0">
-            <AudioFileUploader />
+            <AudioFileUploader onFileUpload={handleFileUpload} />
           </TabsContent>
         </Tabs>
       </CardContent>
