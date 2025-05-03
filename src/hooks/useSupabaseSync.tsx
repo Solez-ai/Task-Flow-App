@@ -20,6 +20,7 @@ export function useSupabaseSync(
     if (!user) return;
     
     try {
+      console.log("Syncing tasks to Supabase for user", user.id);
       // First get tasks from Supabase
       const { data: existingTasks, error: fetchError } = await supabase
         .from('tasks')
@@ -65,40 +66,6 @@ export function useSupabaseSync(
           if (insertError) console.error('Error inserting task:', insertError);
         }
       }
-
-      // Fetch all tasks from database to merge with local
-      const { data: allTasks, error: allTasksError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (allTasksError) throw allTasksError;
-      
-      // Process tasks from the database that might not be in local storage
-      if (allTasks && allTasks.length > 0) {
-        const localTaskIds = new Set(tasks.map(t => t.id));
-        const tasksToAdd = allTasks.filter(t => !localTaskIds.has(t.id));
-        
-        if (tasksToAdd.length > 0) {
-          // Convert database tasks to local task format
-          const newLocalTasks = tasksToAdd.map(dbTask => ({
-            id: dbTask.id,
-            text: dbTask.text,
-            completed: dbTask.completed,
-            timeInMinutes: dbTask.time_in_minutes,
-            note: dbTask.note,
-            important: dbTask.important,
-            completedAt: dbTask.completed_at
-          }));
-          
-          // We don't directly update the tasks state here to avoid circular updates
-          // Instead we save to localStorage and the next app load will include these
-          const allLocalTasks = [...tasks, ...newLocalTasks];
-          localStorage.setItem('tasks', JSON.stringify(allLocalTasks));
-          localStorage.setItem('tasksUserId', user.id);
-        }
-      }
-      
     } catch (error) {
       console.error('Error syncing tasks:', error);
     }
@@ -113,6 +80,7 @@ export function useSupabaseSync(
     if (userUploadedTracks.length === 0) return;
     
     try {
+      console.log("Syncing music tracks to Supabase for user", user.id);
       // Check existing tracks in the database
       const { data: existingTracks, error: fetchError } = await supabase
         .from('user_music')
@@ -138,27 +106,12 @@ export function useSupabaseSync(
               id: track.id,
               user_id: user.id,
               title: track.title,
-              artist: track.artist,
+              artist: track.artist || 'Unknown',
               storage_path: 'user_uploaded' // Placeholder since we're not uploading the actual file yet
             });
             
           if (insertError) console.error('Error inserting music track:', insertError);
         }
-      }
-
-      // Fetch tracks from database
-      const { data: dbTracks, error: dbTracksError } = await supabase
-        .from('user_music')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (dbTracksError) throw dbTracksError;
-      
-      // Process tracks from database - currently we don't sync fully here since
-      // we don't have the audio files stored properly yet
-      if (dbTracks && dbTracks.length > 0) {
-        // In a future enhancement we could implement proper audio file retrieval from storage
-        // For now, we're just ensuring the metadata is preserved
       }
     } catch (error) {
       console.error('Error syncing music tracks:', error);
@@ -170,6 +123,7 @@ export function useSupabaseSync(
     if (!user) return;
     
     try {
+      console.log("Syncing stats to Supabase for user", user.id);
       const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
       
       // Check if we already have stats for today
@@ -220,24 +174,41 @@ export function useSupabaseSync(
   useEffect(() => {
     if (!user) return;
     
-    const syncAllData = async () => {
-      await Promise.all([
+    console.log("Setting up sync intervals for user data");
+    
+    // Initial sync when component mounts and user is present
+    const initialSync = async () => {
+      console.log("Performing initial sync of user data");
+      try {
+        await Promise.all([
+          syncTasks(),
+          syncMusicTracks(),
+          syncStats()
+        ]);
+      } catch (error) {
+        console.error("Error during initial sync:", error);
+      }
+    };
+    
+    // Perform initial sync
+    initialSync();
+    
+    // Set up a periodic sync
+    const syncTimer = setInterval(() => {
+      console.log("Performing periodic sync of user data");
+      Promise.all([
         syncTasks(),
         syncMusicTracks(),
         syncStats()
-      ]);
-    };
-
-    // Initial sync when component mounts
-    syncAllData();
-    
-    // Also set up a periodic sync
-    const syncTimer = setInterval(syncAllData, 60000); // Sync every minute
+      ]).catch(error => {
+        console.error("Error during periodic sync:", error);
+      });
+    }, 60000); // Sync every minute
     
     return () => {
       clearInterval(syncTimer);
     };
-  }, [user, tasks, userTracks, stats]);
+  }, [user, tasks.length, userTracks.length, JSON.stringify(stats)]);
   
   return {
     syncTasks,

@@ -16,11 +16,15 @@ const App = () => {
   // Listen for storage events to sync across tabs
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith('userMusic') || 
-          e.key && e.key.startsWith('tasks') ||
-          e.key && e.key.startsWith('dailyStats') ||
-          e.key && e.key.startsWith('earnedBadges')) {
+      if (e.key && (
+          e.key.startsWith('userMusic') || 
+          e.key.startsWith('tasks') ||
+          e.key.startsWith('dailyStats') ||
+          e.key.startsWith('earnedBadges') ||
+          e.key === 'currentTrackIndex'
+      )) {
         // Force refresh if key data changed in another tab
+        console.log("Storage change detected for key:", e.key, "- reloading page");
         window.location.reload();
       }
     };

@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch user profile data
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user", userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Store profile data in localStorage for persistence
       if (data) {
+        console.log("Profile found:", data);
         localStorage.setItem('userProfile', JSON.stringify(data));
         setProfile(data);
       }
@@ -44,7 +46,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Try to get profile from localStorage if fetch fails
       const savedProfile = localStorage.getItem('userProfile');
       if (savedProfile) {
-        setProfile(JSON.parse(savedProfile));
+        try {
+          const parsedProfile = JSON.parse(savedProfile);
+          if (parsedProfile && parsedProfile.id === userId) {
+            setProfile(parsedProfile);
+            console.log("Using cached profile from localStorage");
+          } else {
+            console.log("Cached profile doesn't match current user, ignoring");
+          }
+        } catch (e) {
+          console.error("Error parsing saved profile:", e);
+        }
       }
     }
   };
@@ -60,10 +72,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set loading state while we get the session
     setIsLoading(true);
+    console.log("Setting up auth state listener");
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -74,7 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }, 0);
         } else {
           setProfile(null);
-          localStorage.removeItem('userProfile');
         }
 
         if (event === 'SIGNED_IN') {
@@ -88,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      console.log("Initial session check:", initialSession ? "Found session" : "No session");
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       
@@ -95,7 +109,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Use existing profile data from localStorage if available
         const savedProfile = localStorage.getItem('userProfile');
         if (savedProfile) {
-          setProfile(JSON.parse(savedProfile));
+          try {
+            const parsedProfile = JSON.parse(savedProfile);
+            if (parsedProfile && parsedProfile.id === initialSession.user.id) {
+              setProfile(parsedProfile);
+              console.log("Using cached profile from localStorage");
+            }
+          } catch (e) {
+            console.error("Error parsing saved profile:", e);
+          }
         }
         
         fetchProfile(initialSession.user.id);
@@ -112,12 +134,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in for:", email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      
+      if (error) {
+        console.error("Sign in error:", error);
+        toast.error("Sign in failed: " + error.message);
+      }
+      
       return { error };
     } catch (error) {
+      console.error("Unexpected sign in error:", error);
       return { error };
     }
   };
@@ -125,20 +155,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign up with email and password
   const signUp = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign up for:", email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
+      
+      if (error) {
+        console.error("Sign up error:", error);
+        toast.error("Sign up failed: " + error.message);
+      } else {
+        toast.success("Sign up successful! Verify your email if required.");
+      }
+      
       return { data, error };
     } catch (error) {
+      console.error("Unexpected sign up error:", error);
       return { error, data: null };
     }
   };
 
   // Sign out
   const signOut = async () => {
+    console.log("Signing out");
     await supabase.auth.signOut();
-    localStorage.removeItem('userProfile');
   };
 
   return (

@@ -18,6 +18,7 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
         // Check if saved index is valid based on authentication status
         if ((user && savedIndexUserId === user.id) || (!user && !savedIndexUserId)) {
           const parsedIndex = parseInt(savedIndex, 10);
+          console.log("Restoring track index:", parsedIndex);
           // Make sure the index is valid for the current track list
           if (parsedIndex >= 0 && parsedIndex < tracks.length) {
             return parsedIndex;
@@ -69,6 +70,7 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   
+  // Get current track safely
   const currentTrack = tracks.length > 0 && currentTrackIndex < tracks.length ? 
     tracks[currentTrackIndex] : 
     {
@@ -100,6 +102,7 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
   useEffect(() => {
     if (tracks.length > 0) {
       try {
+        console.log("Saving current track index:", currentTrackIndex);
         localStorage.setItem('currentTrackIndex', currentTrackIndex.toString());
       } catch (error) {
         console.error("Error saving current track index:", error);
@@ -115,14 +118,34 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
     return "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3";
   };
 
+  // Clean up blob URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clean up any blob URLs when component unmounts
+      tracks.forEach(track => {
+        if (track.src && track.src.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(track.src);
+          } catch (e) {
+            console.error("Error revoking object URL:", e);
+          }
+        }
+      });
+    };
+  }, []);
+
   // Initialize audio element
   useEffect(() => {
+    console.log("Initializing audio player");
+    
     // Create audio element
     if (!audioRef.current) {
       audioRef.current = new Audio();
+      console.log("Created new audio element");
       
       // Set up audio event listeners
       audioRef.current.addEventListener('loadedmetadata', () => {
+        console.log("Audio metadata loaded, duration:", audioRef.current?.duration);
         setDuration(audioRef.current?.duration || 0);
       });
       
@@ -130,12 +153,23 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
         setCurrentTime(audioRef.current?.currentTime || 0);
       });
       
-      audioRef.current.addEventListener('ended', handleTrackEnd);
+      audioRef.current.addEventListener('ended', () => {
+        console.log("Track ended");
+        handleTrackEnd();
+      });
+      
+      audioRef.current.addEventListener('error', (e) => {
+        console.error("Audio error:", e);
+        toast.error("Error playing track. Please try another file.");
+        setIsPlaying(false);
+      });
     }
     
     // If we have a current track, set its source
     if (currentTrack?.src) {
       const audioUrl = getAudioUrl(currentTrack.src);
+      console.log("Setting initial track source:", audioUrl);
+      
       if (audioRef.current.src !== audioUrl) {
         audioRef.current.src = audioUrl;
         audioRef.current.load();
@@ -165,6 +199,8 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
     if (audioRef.current && currentTrack?.src) {
       const wasPlaying = isPlaying;
       const audioUrl = getAudioUrl(currentTrack.src);
+      
+      console.log("Changing track, was playing:", wasPlaying, "new URL:", audioUrl);
       
       if (audioRef.current.src !== audioUrl) {
         audioRef.current.src = audioUrl;
@@ -206,6 +242,7 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
   const togglePlay = () => {
     if (audioRef.current) {
       if (isPlaying) {
+        console.log("Pausing audio");
         audioRef.current.pause();
         setIsPlaying(false);
       } else {
@@ -214,6 +251,7 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
           return;
         }
         
+        console.log("Playing audio");
         audioRef.current.play().catch(err => {
           console.error("Playback error:", err);
           toast.error("Error playing track. Please try another file.");
@@ -225,6 +263,7 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
   };
 
   const handleTrackEnd = () => {
+    console.log("Track ended handler");
     if (!isLooping) {
       nextTrack();
     }
@@ -235,6 +274,7 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
       toast.info("No tracks available. Please upload music.");
       return;
     }
+    console.log("Next track");
     const newIndex = (currentTrackIndex + 1) % tracks.length;
     setCurrentTrackIndex(newIndex);
   };
@@ -244,20 +284,24 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
       toast.info("No tracks available. Please upload music.");
       return;
     }
+    console.log("Previous track");
     const newIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
     setCurrentTrackIndex(newIndex);
   };
 
   const toggleLoop = () => {
+    console.log("Toggle loop:", !isLooping);
     setIsLooping(!isLooping);
   };
 
   const toggleMute = () => {
+    console.log("Toggle mute:", !isMuted);
     setIsMuted(!isMuted);
   };
 
   const handleVolumeChange = (newValue: number[]) => {
     const vol = newValue[0];
+    console.log("Volume change:", vol);
     setVolume(vol);
     if (vol === 0) {
       setIsMuted(true);
@@ -267,7 +311,9 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
   };
 
   const handleSpeedChange = (newValue: number[]) => {
-    setPlaybackRate(newValue[0] / 100);
+    const speed = newValue[0] / 100;
+    console.log("Speed change:", speed);
+    setPlaybackRate(speed);
   };
 
   // Format time for display (mm:ss)
