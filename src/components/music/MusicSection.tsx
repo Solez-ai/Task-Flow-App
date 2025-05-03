@@ -32,6 +32,11 @@ const MusicSection: React.FC<MusicSectionProps> = ({
       togglePlay();
     }
   };
+  
+  // Create a wrapper function that adapts handleDeleteTrack to match the expected signature
+  const handleTrackDelete = (id: string | number) => {
+    handleDeleteTrack(id, currentTrackIndex);
+  };
 
   return (
     <Card className={`${layoutMode === 'phone' ? 'mb-4' : 'mb-8'} shadow-md`}>
@@ -60,7 +65,7 @@ const MusicSection: React.FC<MusicSectionProps> = ({
               currentTrackIndex={currentTrackIndex}
               isPlaying={isPlaying}
               onTrackSelect={handleTrackSelect}
-              onDeleteTrack={handleDeleteTrack}
+              onDeleteTrack={handleTrackDelete}
             />
           </TabsContent>
           
