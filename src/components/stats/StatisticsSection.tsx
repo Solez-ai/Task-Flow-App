@@ -12,15 +12,17 @@ interface StatisticsSectionProps {
 const StatisticsSection: React.FC<StatisticsSectionProps> = ({ 
   layoutMode = 'pc' 
 }) => {
+  const isCompact = layoutMode === 'phone';
+  
   return (
     <Card className="shadow-md">
-      <CardHeader className={layoutMode === 'phone' ? 'pb-2' : ''}>
-        <CardTitle className={layoutMode === 'phone' ? 'text-lg' : ''}>Statistics</CardTitle>
+      <CardHeader className={isCompact ? 'pb-2' : ''}>
+        <CardTitle className={isCompact ? 'text-lg' : ''}>Statistics</CardTitle>
       </CardHeader>
-      <CardContent className={`${layoutMode === 'phone' ? 'pt-0 space-y-2' : 'space-y-4'}`}>
-        <DailyStatsPanel compact={layoutMode === 'phone'} />
-        <StreakPanel compact={layoutMode === 'phone'} />
-        <BadgeDisplay compact={layoutMode === 'phone'} />
+      <CardContent className={`${isCompact ? 'pt-0 space-y-2' : 'space-y-4'}`}>
+        <DailyStatsPanel />
+        <StreakPanel />
+        <BadgeDisplay compact={isCompact} />
       </CardContent>
     </Card>
   );
