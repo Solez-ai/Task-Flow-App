@@ -2,18 +2,34 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Track } from '@/components/MusicLibrary';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useUserTracks() {
+  const { user } = useAuth();
   const [audioObjectURLs, setAudioObjectURLs] = useState<string[]>([]);
   const [userTracks, setUserTracks] = useState<Track[]>(() => {
+    // Get saved tracks from localStorage
     const savedTracks = localStorage.getItem('userMusicTracks');
-    return savedTracks ? JSON.parse(savedTracks) : [];
+    const savedTracksUserId = localStorage.getItem('tracksUserId');
+    
+    // Only restore tracks if they belong to the current user or if user is not authenticated
+    if (savedTracks && user && savedTracksUserId === user.id) {
+      return JSON.parse(savedTracks); 
+    } else if (savedTracks && !user && !savedTracksUserId) {
+      // For non-authenticated users, we can still show their local tracks
+      return JSON.parse(savedTracks);
+    }
+    return [];
   });
   
   // Save user tracks to localStorage when they change
   useEffect(() => {
     localStorage.setItem('userMusicTracks', JSON.stringify(userTracks));
-  }, [userTracks]);
+    // Store the user ID alongside tracks for authentication verification
+    if (user) {
+      localStorage.setItem('tracksUserId', user.id);
+    }
+  }, [userTracks, user]);
   
   // Clean up object URLs to avoid memory leaks
   useEffect(() => {

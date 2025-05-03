@@ -65,6 +65,39 @@ export function useSupabaseSync(
           if (insertError) console.error('Error inserting task:', insertError);
         }
       }
+
+      // Fetch all tasks from database to merge with local
+      const { data: allTasks, error: allTasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (allTasksError) throw allTasksError;
+      
+      // Process tasks from the database that might not be in local storage
+      if (allTasks && allTasks.length > 0) {
+        const localTaskIds = new Set(tasks.map(t => t.id));
+        const tasksToAdd = allTasks.filter(t => !localTaskIds.has(t.id));
+        
+        if (tasksToAdd.length > 0) {
+          // Convert database tasks to local task format
+          const newLocalTasks = tasksToAdd.map(dbTask => ({
+            id: dbTask.id,
+            text: dbTask.text,
+            completed: dbTask.completed,
+            timeInMinutes: dbTask.time_in_minutes,
+            note: dbTask.note,
+            important: dbTask.important,
+            completedAt: dbTask.completed_at
+          }));
+          
+          // We don't directly update the tasks state here to avoid circular updates
+          // Instead we save to localStorage and the next app load will include these
+          const allLocalTasks = [...tasks, ...newLocalTasks];
+          localStorage.setItem('tasks', JSON.stringify(allLocalTasks));
+        }
+      }
+      
     } catch (error) {
       console.error('Error syncing tasks:', error);
     }
@@ -110,8 +143,71 @@ export function useSupabaseSync(
           if (insertError) console.error('Error inserting music track:', insertError);
         }
       }
+
+      // Fetch tracks from database
+      const { data: dbTracks, error: dbTracksError } = await supabase
+        .from('user_music')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (dbTracksError) throw dbTracksError;
+      
+      // Process tracks from database - currently we don't sync fully here since
+      // we don't have the audio files stored properly yet
     } catch (error) {
       console.error('Error syncing music tracks:', error);
+    }
+  };
+
+  // Sync user stats with Supabase
+  const syncStats = async () => {
+    if (!user) return;
+    
+    try {
+      const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      
+      // Check if we already have stats for today
+      const { data: existingStats, error: fetchError } = await supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .single();
+        
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows returned
+        throw fetchError;
+      }
+      
+      if (existingStats) {
+        // Update existing stats
+        const { error: updateError } = await supabase
+          .from('user_stats')
+          .update({
+            pomodoro_sessions: stats.pomodoroSessions,
+            completed_tasks: stats.completedTasks,
+            focused_time_minutes: stats.focusedTimeMinutes,
+            study_mode_rounds: stats.studyModeRounds
+          })
+          .eq('id', existingStats.id);
+          
+        if (updateError) throw updateError;
+      } else {
+        // Insert new stats for today
+        const { error: insertError } = await supabase
+          .from('user_stats')
+          .insert({
+            user_id: user.id,
+            date: today,
+            pomodoro_sessions: stats.pomodoroSessions,
+            completed_tasks: stats.completedTasks,
+            focused_time_minutes: stats.focusedTimeMinutes,
+            study_mode_rounds: stats.studyModeRounds
+          });
+          
+        if (insertError) throw insertError;
+      }
+    } catch (error) {
+      console.error('Error syncing stats:', error);
     }
   };
   
@@ -122,11 +218,12 @@ export function useSupabaseSync(
     const syncAllData = async () => {
       await Promise.all([
         syncTasks(),
-        syncMusicTracks()
+        syncMusicTracks(),
+        syncStats()
       ]);
     };
 
-    // Sync immediately when tasks or tracks change
+    // Initial sync when component mounts
     syncAllData();
     
     // Also set up a periodic sync
@@ -135,10 +232,11 @@ export function useSupabaseSync(
     return () => {
       clearInterval(syncTimer);
     };
-  }, [user, tasks, userTracks]);
+  }, [user, tasks, userTracks, stats]);
   
   return {
     syncTasks,
-    syncMusicTracks
+    syncMusicTracks,
+    syncStats
   };
 }

@@ -2,29 +2,86 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Track } from '@/components/MusicLibrary';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
+  const { user } = useAuth();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(initialTrackIndex);
-  const [volume, setVolume] = useState(70);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isLooping, setIsLooping] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(() => {
+    // Try to restore current track index from localStorage if available
+    const savedIndex = localStorage.getItem('currentTrackIndex');
+    const savedIndexUserId = localStorage.getItem('currentTrackIndexUserId');
+    
+    if (savedIndex !== null && tracks.length > 0) {
+      // Check if saved index is valid based on authentication status
+      if ((user && savedIndexUserId === user.id) || (!user && !savedIndexUserId)) {
+        const parsedIndex = parseInt(savedIndex, 10);
+        // Make sure the index is valid for the current track list
+        if (parsedIndex >= 0 && parsedIndex < tracks.length) {
+          return parsedIndex;
+        }
+      }
+    }
+    return initialTrackIndex;
+  });
+  
+  const [volume, setVolume] = useState(() => {
+    const savedVolume = localStorage.getItem('audioVolume');
+    return savedVolume ? parseInt(savedVolume, 10) : 70;
+  });
+  
+  const [isMuted, setIsMuted] = useState(() => {
+    const savedMuted = localStorage.getItem('audioMuted');
+    return savedMuted ? savedMuted === 'true' : false;
+  });
+  
+  const [isLooping, setIsLooping] = useState(() => {
+    const savedLoop = localStorage.getItem('audioLoop');
+    return savedLoop ? savedLoop === 'true' : false;
+  });
+  
+  const [playbackRate, setPlaybackRate] = useState(() => {
+    const savedRate = localStorage.getItem('audioPlaybackRate');
+    return savedRate ? parseFloat(savedRate) : 1;
+  });
+  
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   
-  const currentTrack = tracks[currentTrackIndex] || {
-    id: 'placeholder',
-    title: 'No tracks available',
-    artist: 'Please upload music',
-    src: '',
-    isUserUploaded: true
-  };
+  const currentTrack = tracks.length > 0 && currentTrackIndex < tracks.length ? 
+    tracks[currentTrackIndex] : 
+    {
+      id: 'placeholder',
+      title: 'No tracks available',
+      artist: 'Please upload music',
+      src: '',
+      isUserUploaded: true
+    };
+
+  // Save audio settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('audioVolume', volume.toString());
+    localStorage.setItem('audioMuted', isMuted.toString());
+    localStorage.setItem('audioLoop', isLooping.toString());
+    localStorage.setItem('audioPlaybackRate', playbackRate.toString());
+    
+    // If authenticated, associate settings with user
+    if (user) {
+      localStorage.setItem('currentTrackIndexUserId', user.id);
+    }
+  }, [volume, isMuted, isLooping, playbackRate, user]);
+
+  // Save current track index to localStorage
+  useEffect(() => {
+    if (tracks.length > 0) {
+      localStorage.setItem('currentTrackIndex', currentTrackIndex.toString());
+    }
+  }, [currentTrackIndex, tracks.length]);
 
   // Get audio URL (handle blob URLs and direct file paths)
-  const getAudioUrl = (pixabayUrl: string) => {
-    if (pixabayUrl.endsWith('.mp3') || pixabayUrl.startsWith('blob:') || !pixabayUrl) return pixabayUrl;
+  const getAudioUrl = (trackSrc: string) => {
+    if (trackSrc.endsWith('.mp3') || trackSrc.startsWith('blob:') || !trackSrc) return trackSrc;
     return "https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3";
   };
 
@@ -50,6 +107,7 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.removeEventListener('ended', handleTrackEnd);
+        setIsPlaying(false);
       }
     };
   }, []);
@@ -57,10 +115,14 @@ export function useAudioPlayer(tracks: Track[], initialTrackIndex: number = 0) {
   // Handle track changes
   useEffect(() => {
     if (audioRef.current && currentTrack?.src) {
+      const wasPlaying = isPlaying;
       audioRef.current.src = getAudioUrl(currentTrack.src);
       audioRef.current.load();
-      if (isPlaying) {
-        audioRef.current.play().catch(err => console.log("Playback error:", err));
+      if (wasPlaying) {
+        audioRef.current.play().catch(err => {
+          console.log("Playback error:", err);
+          setIsPlaying(false);
+        });
       }
     }
   }, [currentTrackIndex, currentTrack?.src]);

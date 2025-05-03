@@ -8,21 +8,27 @@ import NotFound from './pages/NotFound';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import { LayoutProvider } from './contexts/LayoutContext';
+import { ThemeProvider } from '@/hooks/useTheme';
+import { StatsProvider } from './contexts/StatsContext';
 import './App.css';
 
 const App = () => {
   return (
     <main>
       <AuthProvider>
-        <LayoutProvider>
-          <Toaster position="bottom-right" richColors closeButton />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </LayoutProvider>
+        <ThemeProvider>
+          <LayoutProvider>
+            <StatsProvider>
+              <Toaster position="bottom-right" richColors closeButton />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </StatsProvider>
+          </LayoutProvider>
+        </ThemeProvider>
       </AuthProvider>
     </main>
   );

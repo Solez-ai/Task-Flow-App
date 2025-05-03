@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface DailyStats {
   pomodoroSessions: number;
@@ -10,12 +12,16 @@ export interface DailyStats {
 }
 
 export const useDailyStats = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DailyStats>(() => {
     const savedStats = localStorage.getItem('dailyStats');
-    const savedDate = localStorage.getItem('dailyStatsDate');
+    const savedStatsUserId = localStorage.getItem('statsUserId');
     const today = new Date().toDateString();
     
-    if (savedStats && savedDate === today) {
+    // Only restore stats if they belong to the current user or if user is not authenticated
+    if (savedStats && user && savedStatsUserId === user.id) {
+      return JSON.parse(savedStats);
+    } else if (savedStats && !user && !savedStatsUserId) {
       return JSON.parse(savedStats);
     } else {
       const lastTaskDate = localStorage.getItem('lastTaskDate');
@@ -52,7 +58,11 @@ export const useDailyStats = () => {
   useEffect(() => {
     localStorage.setItem('dailyStats', JSON.stringify(stats));
     localStorage.setItem('dailyStatsDate', new Date().toDateString());
-  }, [stats]);
+    // Store the user ID alongside stats for authentication verification
+    if (user) {
+      localStorage.setItem('statsUserId', user.id);
+    }
+  }, [stats, user]);
 
   const addPomodoroSession = (minutes?: number) => {
     setStats(prev => ({

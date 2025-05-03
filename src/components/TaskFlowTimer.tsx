@@ -16,15 +16,26 @@ import { Navigate } from 'react-router-dom';
 import { useLayout } from '@/contexts/LayoutContext';
 
 const TaskFlowTimer: React.FC = () => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>(() => {
+    // Load tasks from localStorage, but only if they're associated with the current user
     const savedTasks = localStorage.getItem('tasks');
-    return savedTasks ? JSON.parse(savedTasks) : [];
+    const savedTasksUserId = localStorage.getItem('tasksUserId');
+    
+    // Only restore tasks if they belong to the current user
+    if (savedTasks && user && savedTasksUserId === user.id) {
+      return JSON.parse(savedTasks);
+    } else if (savedTasks && !user && !savedTasksUserId) {
+      // For non-authenticated users, we can still show their local tasks
+      return JSON.parse(savedTasks);
+    }
+    return [];
   });
+  
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   
   const { layoutMode } = useLayout();
   const { userTracks } = useUserTracks();
-  const { user } = useAuth();
   
   const {
     stats,
@@ -37,6 +48,15 @@ const TaskFlowTimer: React.FC = () => {
     processStats,
   } = useBadges();
 
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    // Store the user ID alongside tasks for authentication verification
+    if (user) {
+      localStorage.setItem('tasksUserId', user.id);
+    }
+  }, [tasks, user]);
+
   // Set up data sync with Supabase when user is authenticated
   useSupabaseSync(tasks, userTracks);
 
@@ -44,6 +64,15 @@ const TaskFlowTimer: React.FC = () => {
   useEffect(() => {
     processStats(stats);
   }, [stats]);
+
+  // Clear data when user signs out
+  useEffect(() => {
+    // When user signs out (user becomes null after being defined)
+    if (!user) {
+      // We don't clear localStorage for tasks/tracks here to avoid losing data on page refresh
+      // Instead, we check the user ID when loading data
+    }
+  }, [user]);
 
   const handleSessionComplete = () => {
     // Update daily stats
