@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useStats } from '@/contexts/StatsContext';
-import { useBadges } from '@/hooks/useBadges';
 import { toast } from 'sonner';
 import { Task } from './TaskItem';
 import Header from './Header';
@@ -32,35 +31,25 @@ const TaskFlowTimer: React.FC = () => {
     addCompletedTask,
     addStudyModeRound,
   } = useStats();
-  
-  const {
-    processStats,
-  } = useBadges();
 
+  // Save tasks to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }, [tasks]);
+  
   // Set up data sync with Supabase when user is authenticated
   useSupabaseSync(tasks, userTracks);
-
-  // Process stats for badges
-  useEffect(() => {
-    processStats(stats);
-  }, [stats]);
 
   const handleSessionComplete = () => {
     // Update daily stats
     const sessionLength = activeTask?.timeInMinutes || 25;
     addPomodoroSession(sessionLength);
 
-    // Check for time-based badges
-    processStats({
-      ...stats,
-      focusedTimeMinutes: stats.focusedTimeMinutes + sessionLength
-    });
-
     // If completing a task-specific timer, mark that task as complete
     if (activeTask) {
       setTasks(tasks.map(task => {
         if (task.id === activeTask.id) {
-          addCompletedTask(); // Count as completed task
+          addCompletedTask(); // Count as completed task in stats
           
           return {
             ...task,
@@ -88,9 +77,6 @@ const TaskFlowTimer: React.FC = () => {
     toast.success("Study round completed!", {
       description: "Great job keeping focused!"
     });
-    
-    // Process stats for possible badges
-    processStats(stats);
   };
 
   const startTaskTimer = (task: Task) => {
@@ -98,6 +84,27 @@ const TaskFlowTimer: React.FC = () => {
     toast(`Starting timer for: ${task.text}`, {
       description: `${task.timeInMinutes} minute focus session`
     });
+  };
+
+  // Handle toggling task completion status
+  const handleToggleComplete = (taskId: string) => {
+    setTasks(tasks.map(task => {
+      if (task.id === taskId) {
+        const newCompletedState = !task.completed;
+        
+        // If marking as complete, update stats
+        if (newCompletedState) {
+          addCompletedTask();
+        }
+        
+        return {
+          ...task,
+          completed: newCompletedState,
+          completedAt: newCompletedState ? new Date().toISOString() : undefined
+        };
+      }
+      return task;
+    }));
   };
 
   // Determine container classes based on layout mode
@@ -127,6 +134,7 @@ const TaskFlowTimer: React.FC = () => {
           setTasks={setTasks} 
           startTaskTimer={startTaskTimer}
           layoutMode={layoutMode}
+          onToggleComplete={handleToggleComplete}
         />
         
         <MusicSection layoutMode={layoutMode} />

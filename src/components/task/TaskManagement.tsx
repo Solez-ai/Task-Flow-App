@@ -10,13 +10,15 @@ interface TaskManagementProps {
   setTasks: (tasks: Task[]) => void;
   startTaskTimer: (task: Task) => void;
   layoutMode?: 'pc' | 'phone';
+  onToggleComplete: (taskId: string) => void;
 }
 
 const TaskManagement: React.FC<TaskManagementProps> = ({ 
   tasks, 
   setTasks, 
   startTaskTimer,
-  layoutMode = 'pc'
+  layoutMode = 'pc',
+  onToggleComplete
 }) => {
   const handleAddTask = (taskText: string, timeInMinutes?: number, important?: boolean) => {
     const newTask: Task = {
@@ -37,19 +39,6 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     setTasks(tasks.map(task => 
       task.id === updatedTask.id ? updatedTask : task
     ));
-  };
-
-  const handleToggleComplete = (taskId: string) => {
-    setTasks(tasks.map(task => {
-      if (task.id === taskId) {
-        return {
-          ...task,
-          completed: !task.completed,
-          completedAt: !task.completed ? new Date().toISOString() : undefined
-        };
-      }
-      return task;
-    }));
   };
 
   const handleUpdateNote = (taskId: string, note: string) => {
@@ -79,7 +68,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         <TaskForm onAddTask={handleAddTask} />
         <TaskList
           tasks={tasks}
-          onToggle={handleToggleComplete}
+          onToggle={onToggleComplete}
           onDelete={handleDeleteTask}
           onStartTimer={startTaskTimer}
           onShowAIOptions={() => {}}

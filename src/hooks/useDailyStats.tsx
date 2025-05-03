@@ -1,4 +1,7 @@
+
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface DailyStats {
   pomodoroSessions: number;
@@ -10,6 +13,7 @@ export interface DailyStats {
 }
 
 export const useDailyStats = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState<DailyStats>(() => {
     const savedStats = localStorage.getItem('dailyStats');
     const savedDate = localStorage.getItem('dailyStatsDate');
@@ -49,6 +53,62 @@ export const useDailyStats = () => {
     }
   });
 
+  // Sync with Supabase when user is authenticated
+  useEffect(() => {
+    if (user) {
+      const syncStatsToSupabase = async () => {
+        try {
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Check if we already have stats for today
+          const { data: existingStats } = await supabase
+            .from('user_stats')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('date', today)
+            .single();
+            
+          if (existingStats) {
+            // Update existing stats
+            await supabase
+              .from('user_stats')
+              .update({
+                pomodoro_sessions: stats.pomodoroSessions,
+                completed_tasks: stats.completedTasks,
+                focused_time_minutes: stats.focusedTimeMinutes,
+                study_mode_rounds: stats.studyModeRounds
+              })
+              .eq('id', existingStats.id);
+          } else {
+            // Insert new stats
+            await supabase
+              .from('user_stats')
+              .insert({
+                user_id: user.id,
+                date: today,
+                pomodoro_sessions: stats.pomodoroSessions,
+                completed_tasks: stats.completedTasks,
+                focused_time_minutes: stats.focusedTimeMinutes,
+                study_mode_rounds: stats.studyModeRounds
+              });
+          }
+        } catch (error) {
+          console.error('Error syncing stats to Supabase:', error);
+        }
+      };
+      
+      // Sync immediately when stats change
+      syncStatsToSupabase();
+      
+      // Also set up periodic sync
+      const syncTimer = setInterval(syncStatsToSupabase, 30000); // Every 30 seconds
+      
+      return () => {
+        clearInterval(syncTimer);
+      };
+    }
+  }, [user, stats]);
+
   useEffect(() => {
     localStorage.setItem('dailyStats', JSON.stringify(stats));
     localStorage.setItem('dailyStatsDate', new Date().toDateString());
@@ -69,11 +129,27 @@ export const useDailyStats = () => {
       const newCompletedTasks = prev.completedTasks + 1;
       let newStreak = prev.streak;
       
-      if (newCompletedTasks === 2) {
-        newStreak = newStreak === 0 ? 1 : newStreak;
+      if (newCompletedTasks === 1) {
+        newStreak = prev.streak === 0 ? 1 : prev.streak;
       } 
-      else if (newCompletedTasks > 2 && newCompletedTasks > prev.completedTasks) {
-        newStreak += 1;
+      else if (newCompletedTasks > 1) {
+        // Check if the last task was completed on a different day
+        if (prev.lastTaskDate) {
+          const lastTaskDate = new Date(prev.lastTaskDate).toDateString();
+          const todayDate = new Date().toDateString();
+          const yesterdayDate = new Date(Date.now() - 86400000).toDateString();
+          
+          if (lastTaskDate === yesterdayDate) {
+            // If last task was yesterday, increment streak
+            newStreak += 1;
+          } else if (lastTaskDate !== todayDate) {
+            // If last task was not yesterday and not today, reset streak
+            newStreak = 1;
+          }
+        } else {
+          // First task ever
+          newStreak = 1;
+        }
       }
       
       return {
@@ -84,7 +160,7 @@ export const useDailyStats = () => {
       };
     });
     
-    localStorage.setItem('lastTaskDate', new Date().toISOString());
+    localStorage.setItem('lastTaskDate', today);
   };
   
   const addStudyModeRound = () => {
