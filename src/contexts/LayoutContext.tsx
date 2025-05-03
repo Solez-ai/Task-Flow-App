@@ -13,12 +13,11 @@ interface LayoutContextProps {
 const LayoutContext = createContext<LayoutContextProps | undefined>(undefined);
 
 export function LayoutProvider({ children }: { children: React.ReactNode }) {
+  // Initialize with a default value to prevent initial render issues
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('pc');
   const isMobileDevice = useIsMobile();
   
-  // Default to PC layout on desktop and phone layout on mobile devices
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>(isMobileDevice ? 'phone' : 'pc');
-
-  // Update layout mode when device changes
+  // Update layout mode when device detection completes
   useEffect(() => {
     setLayoutMode(isMobileDevice ? 'phone' : 'pc');
   }, [isMobileDevice]);
