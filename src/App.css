@@ -1,8 +1,4 @@
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -95,28 +91,6 @@
 
 .dark body::before {
   animation: subtle-wave 20s ease-in-out infinite;
-}
-
-/* Timer specific animations */
-.timer-progress {
-  --duration: 1500s;
-}
-
-@keyframes progress {
-  from {
-    width: 0%;
-  }
-  to {
-    width: 100%;
-  }
-}
-
-.animate-progress {
-  animation: progress var(--duration) linear forwards;
-}
-
-.fade-transition {
-  transition: all 0.3s ease-in-out;
 }
 
 /* Phone layout specific styles */

@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useStats } from '@/contexts/StatsContext';
 import { Task } from '@/components/TaskItem';
 import { Track } from '@/components/MusicLibrary';
+import { toast } from 'sonner';
 
 // Hook to sync local app data with Supabase when user is authenticated
 export function useSupabaseSync(
@@ -19,7 +20,6 @@ export function useSupabaseSync(
     if (!user) return;
     
     try {
-      console.log("Syncing tasks to Supabase for user", user.id);
       // First get tasks from Supabase
       const { data: existingTasks, error: fetchError } = await supabase
         .from('tasks')
@@ -79,7 +79,6 @@ export function useSupabaseSync(
     if (userUploadedTracks.length === 0) return;
     
     try {
-      console.log("Syncing music tracks to Supabase for user", user.id);
       // Check existing tracks in the database
       const { data: existingTracks, error: fetchError } = await supabase
         .from('user_music')
@@ -88,10 +87,10 @@ export function useSupabaseSync(
         
       if (fetchError) throw fetchError;
       
-      const existingIds = new Set((existingTracks || []).map(t => t.id));
+      const existingTitles = new Set((existingTracks || []).map(t => t.title));
       
       // Only add tracks that don't already exist in the database
-      const newTracks = userUploadedTracks.filter(track => !existingIds.has(track.id));
+      const newTracks = userUploadedTracks.filter(track => !existingTitles.has(track.title));
       
       if (newTracks.length > 0) {
         for (const track of newTracks) {
@@ -102,10 +101,9 @@ export function useSupabaseSync(
           const { error: insertError } = await supabase
             .from('user_music')
             .insert({
-              id: track.id,
               user_id: user.id,
               title: track.title,
-              artist: track.artist || 'Unknown',
+              artist: track.artist,
               storage_path: 'user_uploaded' // Placeholder since we're not uploading the actual file yet
             });
             
@@ -116,102 +114,31 @@ export function useSupabaseSync(
       console.error('Error syncing music tracks:', error);
     }
   };
-
-  // Sync user stats with Supabase
-  const syncStats = async () => {
-    if (!user) return;
-    
-    try {
-      console.log("Syncing stats to Supabase for user", user.id);
-      const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-      
-      // Check if we already have stats for today
-      const { data: existingStats, error: fetchError } = await supabase
-        .from('user_stats')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('date', today);
-        
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows returned
-        throw fetchError;
-      }
-      
-      if (existingStats && existingStats.length > 0) {
-        // Update existing stats
-        const { error: updateError } = await supabase
-          .from('user_stats')
-          .update({
-            pomodoro_sessions: stats.pomodoroSessions,
-            completed_tasks: stats.completedTasks,
-            focused_time_minutes: stats.focusedTimeMinutes,
-            study_mode_rounds: stats.studyModeRounds
-          })
-          .eq('id', existingStats[0].id);
-          
-        if (updateError) throw updateError;
-      } else {
-        // Insert new stats for today
-        const { error: insertError } = await supabase
-          .from('user_stats')
-          .insert({
-            user_id: user.id,
-            date: today,
-            pomodoro_sessions: stats.pomodoroSessions,
-            completed_tasks: stats.completedTasks,
-            focused_time_minutes: stats.focusedTimeMinutes,
-            study_mode_rounds: stats.studyModeRounds
-          });
-          
-        if (insertError) throw insertError;
-      }
-    } catch (error) {
-      console.error('Error syncing stats:', error);
-    }
-  };
   
   // Sync all data when user changes or when there's local data changes
   useEffect(() => {
     if (!user) return;
     
-    console.log("Setting up sync intervals for user data");
-    
-    // Initial sync when component mounts and user is present
-    const initialSync = async () => {
-      console.log("Performing initial sync of user data");
-      try {
-        await Promise.all([
-          syncTasks(),
-          syncMusicTracks(),
-          syncStats()
-        ]);
-      } catch (error) {
-        console.error("Error during initial sync:", error);
-      }
-    };
-    
-    // Perform initial sync
-    initialSync();
-    
-    // Set up a periodic sync
-    const syncTimer = setInterval(() => {
-      console.log("Performing periodic sync of user data");
-      Promise.all([
+    const syncAllData = async () => {
+      await Promise.all([
         syncTasks(),
-        syncMusicTracks(),
-        syncStats()
-      ]).catch(error => {
-        console.error("Error during periodic sync:", error);
-      });
-    }, 30000); // Sync every 30 seconds
+        syncMusicTracks()
+      ]);
+    };
+
+    // Sync immediately when tasks or tracks change
+    syncAllData();
+    
+    // Also set up a periodic sync
+    const syncTimer = setInterval(syncAllData, 60000); // Sync every minute
     
     return () => {
       clearInterval(syncTimer);
     };
-  }, [user, tasks.length, userTracks.length, JSON.stringify(stats)]);
+  }, [user, tasks, userTracks]);
   
   return {
     syncTasks,
-    syncMusicTracks,
-    syncStats
+    syncMusicTracks
   };
 }

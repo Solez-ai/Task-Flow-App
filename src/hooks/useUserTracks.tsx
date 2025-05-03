@@ -1,125 +1,85 @@
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Track } from '@/components/MusicLibrary';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 export function useUserTracks() {
-  const { user } = useAuth();
+  const [audioObjectURLs, setAudioObjectURLs] = useState<string[]>([]);
   const [userTracks, setUserTracks] = useState<Track[]>(() => {
-    try {
-      const savedTracks = localStorage.getItem('userMusic');
-      const savedTracksUserId = localStorage.getItem('userMusicUserId');
-      
-      // Only restore tracks if they belong to the current user
-      if (savedTracks && user && savedTracksUserId === user.id) {
-        console.log("Restoring music library for user", user.id);
-        return JSON.parse(savedTracks);
-      } else if (savedTracks && !user && !savedTracksUserId) {
-        console.log("Restoring music library for anonymous user");
-        // For non-authenticated users, we can still show their local tracks
-        return JSON.parse(savedTracks);
-      }
-    } catch (error) {
-      console.error('Error loading user tracks:', error);
-    }
-    return [];
+    const savedTracks = localStorage.getItem('userMusicTracks');
+    return savedTracks ? JSON.parse(savedTracks) : [];
   });
-
-  // Fetch music tracks from Supabase when user logs in
+  
+  // Save user tracks to localStorage when they change
   useEffect(() => {
-    const fetchUserMusic = async () => {
-      if (!user) return;
-      
-      try {
-        console.log("Fetching music from Supabase for user", user.id);
-        const { data, error } = await supabase
-          .from('user_music')
-          .select('*')
-          .eq('user_id', user.id);
-          
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          console.log("Found music tracks in Supabase:", data.length);
-          
-          // We can't directly fetch the audio files, but we can check if we already have them locally
-          const existingTrackIds = new Set(userTracks.map(track => track.id));
-          const newDatabaseTracks = data.filter(dbTrack => !existingTrackIds.has(dbTrack.id));
-          
-          if (newDatabaseTracks.length > 0) {
-            console.log("Found new tracks in database that aren't in local storage:", newDatabaseTracks.length);
-            // For now, we'll just show these in a notification
-            // In a real implementation, we would fetch the actual audio files from storage
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching music from Supabase:", error);
-      }
+    localStorage.setItem('userMusicTracks', JSON.stringify(userTracks));
+  }, [userTracks]);
+  
+  // Clean up object URLs to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      audioObjectURLs.forEach(url => URL.revokeObjectURL(url));
     };
+  }, [audioObjectURLs]);
+  
+  const handleFileUpload = (file: File) => {
+    // Create an object URL for the file
+    const objectURL = URL.createObjectURL(file);
+    setAudioObjectURLs(prev => [...prev, objectURL]);
     
-    fetchUserMusic();
-  }, [user?.id]);
-
-  // Save user tracks to localStorage whenever they change
-  useEffect(() => {
-    try {
-      console.log("Saving music library to localStorage, tracks:", userTracks.length);
-      localStorage.setItem('userMusic', JSON.stringify(userTracks));
-      
-      // Store the user ID alongside music for authentication verification
-      if (user) {
-        localStorage.setItem('userMusicUserId', user.id);
-      }
-    } catch (error) {
-      console.error('Error saving tracks to localStorage:', error);
-    }
-  }, [userTracks, user]);
-
-  // Handle file upload
-  const handleFileUpload = (file: File): number => {
-    const blobUrl = URL.createObjectURL(file);
+    // Generate a unique ID
+    const id = `user-${Date.now()}`;
     
+    // Extract title from filename (remove extension)
+    const title = file.name.replace(/\.[^/.]+$/, "");
+    
+    // Add to user tracks
     const newTrack: Track = {
-      id: Date.now().toString(), // Use timestamp instead of UUID
-      title: file.name.replace(/\.(mp3|wav|ogg)$/i, ''),
-      artist: "User Upload",
-      src: blobUrl,
+      id,
+      title,
+      artist: 'My Music',
+      src: objectURL,
       isUserUploaded: true
     };
     
-    // Add the new track and return its index
     setUserTracks(prev => [...prev, newTrack]);
-    return userTracks.length; // This is the index of the new track
+    
+    // Return the index of the new track
+    return userTracks.length;
   };
 
-  // Handle track deletion
-  const handleDeleteTrack = (id: string | number, currentTrackIndex: number): number => {
-    let newIndex = currentTrackIndex;
+  const handleDeleteTrack = (id: string | number, currentTrackIndex: number) => {
+    // Find the track to get its URL
+    const trackToDelete = userTracks.find(track => track.id === id);
     
-    setUserTracks(prev => {
-      const trackIndex = prev.findIndex(track => track.id === id);
-      
-      // If we're deleting the current track or one before it, update the current index
-      if (trackIndex !== -1) {
-        if (trackIndex < currentTrackIndex) {
-          newIndex = Math.max(0, currentTrackIndex - 1);
-        } else if (trackIndex === currentTrackIndex) {
-          newIndex = Math.min(prev.length - 2, currentTrackIndex);
-          if (newIndex < 0) newIndex = 0;
-        }
-        
-        // Release blob URL to free up memory
-        const track = prev[trackIndex];
-        if (track?.src?.startsWith('blob:')) {
-          URL.revokeObjectURL(track.src);
-        }
+    // Determine the new current track index
+    let newTrackIndex = currentTrackIndex;
+    
+    if (userTracks.length <= 1) {
+      // If this is the only track, reset index
+      newTrackIndex = 0;
+    } else {
+      // Adjust index if needed
+      const deletedIndex = userTracks.findIndex(track => track.id === id);
+      if (deletedIndex !== -1 && deletedIndex < currentTrackIndex) {
+        newTrackIndex = currentTrackIndex - 1;
+      } else if (deletedIndex === currentTrackIndex && deletedIndex === userTracks.length - 1) {
+        // If we're deleting the last track and it's currently playing, move to previous track
+        newTrackIndex = Math.max(0, currentTrackIndex - 1);
       }
-      
-      return prev.filter(track => track.id !== id);
-    });
+    }
     
-    return newIndex;
+    // Remove the object URL if it exists
+    if (trackToDelete && trackToDelete.src.startsWith('blob:')) {
+      URL.revokeObjectURL(trackToDelete.src);
+      setAudioObjectURLs(prev => prev.filter(url => url !== trackToDelete.src));
+    }
+    
+    // Update user tracks
+    setUserTracks(prev => prev.filter(track => track.id !== id));
+    toast.success("Track removed from library");
+    
+    return newTrackIndex;
   };
 
   return {

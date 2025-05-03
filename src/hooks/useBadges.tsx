@@ -2,40 +2,25 @@
 import { useState, useEffect } from 'react';
 import { DailyStats } from './useDailyStats';
 import { Badge } from '@/types/badges';
-import { useAuth } from '@/contexts/AuthContext';
 
 // Helper function to get badges from local storage
-const getSavedBadges = (userId?: string): Badge[] => {
+const getSavedBadges = (): Badge[] => {
   const savedBadges = localStorage.getItem('earnedBadges');
-  const savedBadgesUserId = localStorage.getItem('badgesUserId');
-  
-  if (savedBadges && (!userId || savedBadgesUserId === userId)) {
-    return JSON.parse(savedBadges);
-  }
-  return [];
+  return savedBadges ? JSON.parse(savedBadges) : [];
 };
 
 // Helper function to save badges to local storage
-const saveBadges = (badges: Badge[], userId?: string) => {
+const saveBadges = (badges: Badge[]) => {
   localStorage.setItem('earnedBadges', JSON.stringify(badges));
-  if (userId) {
-    localStorage.setItem('badgesUserId', userId);
-  }
 };
 
 export const useBadges = () => {
-  const { user } = useAuth();
-  const [earnedBadges, setEarnedBadges] = useState<Badge[]>(getSavedBadges(user?.id));
-
-  // Update badges when user changes
-  useEffect(() => {
-    setEarnedBadges(getSavedBadges(user?.id));
-  }, [user]);
+  const [earnedBadges, setEarnedBadges] = useState<Badge[]>(getSavedBadges());
 
   // Save badges to localStorage when they change
   useEffect(() => {
-    saveBadges(earnedBadges, user?.id);
-  }, [earnedBadges, user]);
+    saveBadges(earnedBadges);
+  }, [earnedBadges]);
 
   // Check if badge exists by ID
   const hasBadge = (id: string): boolean => {

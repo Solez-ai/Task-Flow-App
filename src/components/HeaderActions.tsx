@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLayout } from '@/contexts/LayoutContext';
-import { useTheme } from '@/hooks/useTheme';
-import { Monitor, Smartphone, User, Sun, Moon } from 'lucide-react';
+import { Monitor, Smartphone, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +16,6 @@ import { Link } from 'react-router-dom';
 
 const HeaderActions: React.FC = () => {
   const { signOut, user, profile } = useAuth();
-  const { theme, toggleTheme } = useTheme();
 
   // Add a layout toggle
   const LayoutToggle = () => {
@@ -38,14 +35,6 @@ const HeaderActions: React.FC = () => {
 
   return (
     <div className="flex items-center space-x-2">
-      <Button
-        variant="outline"
-        size="sm"
-        className="mr-0"
-        onClick={toggleTheme}
-      >
-        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-      </Button>
       <LayoutToggle />
       {user ? (
         <DropdownMenu>
