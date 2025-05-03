@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useStats } from '@/contexts/StatsContext';
-import { useBadges } from '@/hooks/useBadges';
 import { toast } from 'sonner';
 import { Task } from './TaskItem';
 import Header from './Header';
@@ -49,10 +48,6 @@ const TaskFlowTimer: React.FC = () => {
     addCompletedTask,
     addStudyModeRound,
   } = useStats();
-  
-  const {
-    processStats,
-  } = useBadges();
 
   // Fetch tasks from Supabase when user logs in
   useEffect(() => {
@@ -117,11 +112,6 @@ const TaskFlowTimer: React.FC = () => {
   // Set up data sync with Supabase when user is authenticated
   useSupabaseSync(tasks, userTracks);
 
-  // Process stats for badges
-  useEffect(() => {
-    processStats(stats);
-  }, [stats, processStats]);
-
   // Handle auth changes
   useEffect(() => {
     // Listen for auth changes to update local data
@@ -147,12 +137,6 @@ const TaskFlowTimer: React.FC = () => {
     // Update daily stats
     const sessionLength = activeTask?.timeInMinutes || 25;
     addPomodoroSession(sessionLength);
-
-    // Check for time-based badges
-    processStats({
-      ...stats,
-      focusedTimeMinutes: stats.focusedTimeMinutes + sessionLength
-    });
 
     // If completing a task-specific timer, mark that task as complete
     if (activeTask) {
@@ -186,9 +170,6 @@ const TaskFlowTimer: React.FC = () => {
     toast.success("Study round completed!", {
       description: "Great job keeping focused!"
     });
-    
-    // Process stats for possible badges
-    processStats(stats);
   };
 
   const startTaskTimer = (task: Task) => {

@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { Track } from '@/components/MusicLibrary';
-import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -82,7 +81,7 @@ export function useUserTracks() {
     const blobUrl = URL.createObjectURL(file);
     
     const newTrack: Track = {
-      id: uuidv4(),
+      id: Date.now().toString(), // Use timestamp instead of UUID
       title: file.name.replace(/\.(mp3|wav|ogg)$/i, ''),
       artist: "User Upload",
       src: blobUrl,

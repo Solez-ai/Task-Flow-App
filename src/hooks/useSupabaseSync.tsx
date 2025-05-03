@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useStats } from '@/contexts/StatsContext';
 import { Task } from '@/components/TaskItem';
 import { Track } from '@/components/MusicLibrary';
-import { toast } from 'sonner';
 
 // Hook to sync local app data with Supabase when user is authenticated
 export function useSupabaseSync(
@@ -203,7 +202,7 @@ export function useSupabaseSync(
       ]).catch(error => {
         console.error("Error during periodic sync:", error);
       });
-    }, 60000); // Sync every minute
+    }, 30000); // Sync every 30 seconds
     
     return () => {
       clearInterval(syncTimer);

@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import DailyStatsPanel from '../DailyStatsPanel';
 import StreakPanel from '../StreakPanel';
-import BadgeDisplay from '../BadgeDisplay';
 
 interface StatisticsSectionProps {
   layoutMode?: 'pc' | 'phone';
@@ -22,7 +21,6 @@ const StatisticsSection: React.FC<StatisticsSectionProps> = ({
       <CardContent className={`${isCompact ? 'pt-0 space-y-2' : 'space-y-4'}`}>
         <DailyStatsPanel />
         <StreakPanel />
-        <BadgeDisplay compact={isCompact} className="mt-4" />
       </CardContent>
     </Card>
   );

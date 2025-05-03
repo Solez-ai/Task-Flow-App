@@ -9,7 +9,6 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import { LayoutProvider } from './contexts/LayoutContext';
 import { ThemeProvider } from '@/hooks/useTheme';
-import { StatsProvider } from './contexts/StatsContext';
 import './App.css';
 
 const App = () => {
@@ -20,7 +19,6 @@ const App = () => {
           e.key.startsWith('userMusic') || 
           e.key.startsWith('tasks') ||
           e.key.startsWith('dailyStats') ||
-          e.key.startsWith('earnedBadges') ||
           e.key === 'currentTrackIndex'
       )) {
         // Force refresh if key data changed in another tab
@@ -38,15 +36,13 @@ const App = () => {
       <AuthProvider>
         <ThemeProvider>
           <LayoutProvider>
-            <StatsProvider>
-              <Toaster position="bottom-right" richColors closeButton />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </StatsProvider>
+            <Toaster position="bottom-right" richColors closeButton />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </LayoutProvider>
         </ThemeProvider>
       </AuthProvider>

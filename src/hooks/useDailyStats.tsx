@@ -16,25 +16,31 @@ export interface DailyStats {
 export const useDailyStats = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<DailyStats>(() => {
+    // Initialize with empty stats
+    const defaultStats = {
+      pomodoroSessions: 0,
+      completedTasks: 0,
+      focusedTimeMinutes: 0,
+      studyModeRounds: 0,
+      streak: 0,
+      lastTaskDate: null
+    };
+    
     try {
       const savedStats = localStorage.getItem('dailyStats');
       const savedStatsUserId = localStorage.getItem('statsUserId');
       const today = new Date().toDateString();
       const savedStatsDate = localStorage.getItem('dailyStatsDate');
       
-      // Check if stats are from today
+      // Check if stats are from today and belong to current user
       const isToday = savedStatsDate === today;
+      const isCurrentUser = (user && savedStatsUserId === user.id) || (!user && !savedStatsUserId);
       
-      // Only restore stats if they belong to the current user and are from today
-      // or if user is not authenticated and are from today
-      if (savedStats && isToday && user && savedStatsUserId === user.id) {
-        console.log("Restoring stats for authenticated user", user.id);
-        return JSON.parse(savedStats);
-      } else if (savedStats && isToday && !user && !savedStatsUserId) {
-        console.log("Restoring stats for unauthenticated user");
+      if (savedStats && isToday && isCurrentUser) {
+        console.log("Restoring stats for user", user?.id || "anonymous");
         return JSON.parse(savedStats);
       } else {
-        console.log("Creating new stats", user?.id);
+        console.log("Creating new stats for user", user?.id || "anonymous");
         // If stats are not from today or user doesn't match, create new stats
         // but check if we have a streak going from yesterday
         const lastTaskDate = localStorage.getItem('lastTaskDate');
@@ -58,24 +64,14 @@ export const useDailyStats = () => {
         }
         
         return {
-          pomodoroSessions: 0,
-          completedTasks: 0,
-          focusedTimeMinutes: 0,
-          studyModeRounds: 0,
+          ...defaultStats,
           streak: streak,
           lastTaskDate: lastTaskDate
         };
       }
     } catch (error) {
       console.error("Error loading stats from localStorage:", error);
-      return {
-        pomodoroSessions: 0,
-        completedTasks: 0,
-        focusedTimeMinutes: 0,
-        studyModeRounds: 0,
-        streak: 0,
-        lastTaskDate: null
-      };
+      return defaultStats;
     }
   });
 
@@ -95,20 +91,20 @@ export const useDailyStats = () => {
           .eq('date', today)
           .single();
           
-        if (error && error.code !== 'PGRST116') { 
+        if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
           throw error;
         }
         
         if (data) {
           console.log("Found stats in Supabase", data);
-          setStats({
+          setStats(prevStats => ({
             pomodoroSessions: data.pomodoro_sessions,
             completedTasks: data.completed_tasks,
             focusedTimeMinutes: data.focused_time_minutes,
             studyModeRounds: data.study_mode_rounds,
-            streak: stats.streak, // Keep local streak value
-            lastTaskDate: stats.lastTaskDate // Keep local last task date
-          });
+            streak: prevStats.streak, // Keep local streak value
+            lastTaskDate: prevStats.lastTaskDate // Keep local last task date
+          }));
           
           // Also update localStorage
           const statsToSave = {
@@ -135,6 +131,8 @@ export const useDailyStats = () => {
   // Save stats to localStorage and sync to Supabase whenever they change
   useEffect(() => {
     try {
+      // Always save to localStorage regardless of user status
+      console.log("Saving updated stats to localStorage:", stats);
       localStorage.setItem('dailyStats', JSON.stringify(stats));
       localStorage.setItem('dailyStatsDate', new Date().toDateString());
       
@@ -142,7 +140,7 @@ export const useDailyStats = () => {
       if (user) {
         localStorage.setItem('statsUserId', user.id);
         
-        // Sync to Supabase (don't await to avoid blocking)
+        // Sync to Supabase
         const syncStatsToServer = async () => {
           try {
             const today = new Date().toISOString().split('T')[0];
@@ -160,6 +158,7 @@ export const useDailyStats = () => {
             
             if (existingStats && existingStats.length > 0) {
               // Update existing stats
+              console.log("Updating existing stats in Supabase");
               const { error: updateError } = await supabase
                 .from('user_stats')
                 .update({
@@ -173,6 +172,7 @@ export const useDailyStats = () => {
               if (updateError) throw updateError;
             } else {
               // Insert new stats for today
+              console.log("Inserting new stats in Supabase");
               const { error: insertError } = await supabase
                 .from('user_stats')
                 .insert({
@@ -199,6 +199,7 @@ export const useDailyStats = () => {
   }, [stats, user]);
 
   const addPomodoroSession = (minutes?: number) => {
+    console.log("Adding pomodoro session", minutes || 25, "minutes");
     setStats(prev => ({
       ...prev,
       pomodoroSessions: prev.pomodoroSessions + 1,
@@ -207,17 +208,18 @@ export const useDailyStats = () => {
   };
 
   const addCompletedTask = () => {
+    console.log("Adding completed task");
     const today = new Date().toISOString();
     
     setStats(prev => {
       const newCompletedTasks = prev.completedTasks + 1;
       let newStreak = prev.streak;
       
-      if (newCompletedTasks === 2) {
-        newStreak = newStreak === 0 ? 1 : newStreak;
-      } 
-      else if (newCompletedTasks > 2 && newCompletedTasks > prev.completedTasks) {
-        newStreak += 1;
+      if (newCompletedTasks === 1) {
+        newStreak = newStreak === 0 ? 1 : newStreak + 1;
+        toast.success(`Streak: ${newStreak} day${newStreak > 1 ? 's' : ''}!`, {
+          description: `Keep up the good work!`
+        });
       }
       
       return {
@@ -232,6 +234,7 @@ export const useDailyStats = () => {
   };
   
   const addStudyModeRound = () => {
+    console.log("Adding study mode round");
     setStats(prev => ({
       ...prev,
       studyModeRounds: prev.studyModeRounds + 1
@@ -239,6 +242,7 @@ export const useDailyStats = () => {
   };
 
   const resetStats = () => {
+    console.log("Resetting stats");
     setStats({
       pomodoroSessions: 0,
       completedTasks: 0,
